@@ -35,6 +35,7 @@ import "./science-cinema.css";
 import "./science-cinema-drive.css";
 import "./cinema-coming-soon.css";
 import "./profile-avatar.css";
+import "./profile-cinema.css";
 import "./hero-cinema-polish.css";
 import "./mobile-home-simplify.css";
 
