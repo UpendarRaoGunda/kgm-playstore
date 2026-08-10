@@ -4,6 +4,7 @@ import CommunityGallery from "./CommunityGallery";
 import CommunityShelf from "./CommunityShelf";
 import VillageChat from "./VillageChat";
 import ScienceCinema from "./ScienceCinema";
+import ScienceCinemaDrive from "./ScienceCinemaDrive";
 import ProfileEditor from "./ProfileEditor";
 import KgmCredits from "./KgmCredits";
 import FreeKnowledgeMission from "./FreeKnowledgeMission";
@@ -28,12 +29,13 @@ import "./youth-top-header.css";
 import "./overlay-layer-fixes.css";
 import "./chat-notifications.css";
 import "./science-cinema.css";
+import "./science-cinema-drive.css";
 import "./profile-avatar.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Youthverse",
   description: "Koratlagudem's digital playground for community apps, science cinema, music, photos, videos, creators and Village Chat — free for everyone.",
-  applicationName: "KGM APK Hub",
+  applicationName: "KGM Youthverse",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -60,11 +62,7 @@ export const viewport: Viewport = {
   themeColor: "#09090d",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en-IN">
       <body>
@@ -79,6 +77,7 @@ export default function RootLayout({
         <CommunityGallery />
         <VillageChat />
         <ScienceCinema />
+        <ScienceCinemaDrive />
         <ProfileEditor />
         <PwaManager />
       </body>
