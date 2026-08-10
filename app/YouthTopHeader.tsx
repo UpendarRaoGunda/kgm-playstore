@@ -127,7 +127,7 @@ export default function YouthTopHeader() {
         <button type="button" onClick={() => jump("#install")}><span>↓</span>{labels.install}</button>
         <button type="button" onClick={() => jump("#safety")}><span>✓</span>{labels.safety}</button>
         <button type="button" onClick={() => jump("#build")}><span>＋</span>{labels.creators}</button>
-        <button type="button" onClick={toggleLanguage}>{labels.language}</button>
+        <button type="button" onClick={toggleLanguage}><span>🌐</span>{labels.language}</button>
         <button type="button" onClick={openAccount}><span>☺</span>{labels.profile}</button>
       </div>
     </header>
