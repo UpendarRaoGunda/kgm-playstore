@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.koratlagudem.kgmplaystore",
+      "sha256_cert_fingerprints": [
+        "89:A6:9F:83:D3:90:F8:B3:9B:60:0E:46:9B:CA:4D:1E:E1:B1:02:19:1D:02:B2:F1:7A:3C:95:BD:FC:32:B7:28"
+      ]
+    }
+  }
+]

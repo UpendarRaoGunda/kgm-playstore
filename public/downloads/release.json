@@ -1,0 +1,10 @@
+{
+  "app": "KGM Playstore",
+  "packageName": "com.koratlagudem.kgmplaystore",
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "minimumAndroid": "Android 8.0 (API 26)",
+  "file": "/downloads/kgm-playstore-latest.apk",
+  "bytes": 652870,
+  "sha256": "19669bf4d8375f07a2349c21cbbd7b7d7cbebf43867d77c6028ee1ffa1d4bbd7"
+}
