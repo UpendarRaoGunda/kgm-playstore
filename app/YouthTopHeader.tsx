@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import KgmAvatar, { type KgmProfile } from "./KgmAvatar";
+import KgmAvatar, { avatarFromUploads, isKgmAvatarUpload, type KgmAvatarUpload, type KgmProfile } from "./KgmAvatar";
 import { PwaInstallButton } from "./PwaInstall";
 
-type Account = { id: string; nickname: string; role: string };
+type Account = { id: string; email: string; nickname: string; role: "Child" | "Teen" | "Adult"; created_at?: string };
 
-const CHAT_API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
-const PROFILE_API = (process.env.NEXT_PUBLIC_KGM_PROFILE_API || "https://kgm-profile-api.onrender.com").replace(/\/$/, "");
+const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
 const TOKEN_KEY = "kgm-village-chat-token-v2";
 const THEME_KEY = "kgm-youth-theme-v1";
 
@@ -25,13 +24,16 @@ export default function YouthTopHeader() {
 
     const token = localStorage.getItem(TOKEN_KEY) || "";
     if (!token) return;
-    fetch(`${PROFILE_API}/api/kgm-profile/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((response) => response.ok ? response.json() : Promise.reject())
-      .then((me: KgmProfile) => setAccount(me))
-      .catch(() => fetch(`${CHAT_API}/api/kgm-chat/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
-        .then((response) => response.ok ? response.json() : Promise.reject())
-        .then((me: Account) => setAccount({ ...me, email: "", avatar: { type: "preset", preset: "orbit-pop" } } as KgmProfile))
-        .catch(() => setAccount(null)));
+    const headers = { Authorization: `Bearer ${token}` };
+    Promise.all([
+      fetch(`${API}/api/kgm-chat/auth/me`, { headers }).then((response) => response.ok ? response.json() : Promise.reject()),
+      fetch(`${API}/api/kgm-uploads/mine`, { headers }).then((response) => response.ok ? response.json() : Promise.reject()),
+    ])
+      .then(([me, uploads]: [Account, { items?: KgmAvatarUpload[] }]) => {
+        const avatars = (uploads.items || []).filter((item) => isKgmAvatarUpload(item) && item.kind === "image");
+        setAccount({ ...me, avatar: avatarFromUploads(avatars) });
+      })
+      .catch(() => setAccount(null));
   }, []);
 
   useEffect(() => {
