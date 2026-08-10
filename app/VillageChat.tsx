@@ -1,18 +1,16 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 type ChatRole = "Child" | "Teen" | "Adult";
-type ChatProfile = { nickname: string; role: ChatRole; clientId: string };
+type AuthMode = "signin" | "register";
+type ChatAccount = { id: string; email: string; nickname: string; role: ChatRole; email_verified: boolean; created_at: string };
+type AuthResponse = { token: string; user: ChatAccount; verification_required: boolean };
 type ChatMessage = { id: string; nickname: string; role: ChatRole; text: string; created_at: string; mine: boolean };
 
 const CHAT_API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
-const PROFILE_KEY = "kgm-village-chat-profile-v1";
-
-function createClientId() {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
-  return `kgm-${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
-}
+const TOKEN_KEY = "kgm-village-chat-token-v2";
 
 function timeLabel(value: string) {
   const date = new Date(value);
@@ -20,8 +18,11 @@ function timeLabel(value: string) {
   return new Intl.DateTimeFormat("en-IN", { hour: "numeric", minute: "2-digit" }).format(date);
 }
 
-async function jsonRequest<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, { ...init, headers: { "Content-Type": "application/json", ...(init?.headers || {}) } });
+async function jsonRequest<T>(url: string, init?: RequestInit, token?: string): Promise<T> {
+  const headers = new Headers(init?.headers || {});
+  headers.set("Content-Type", "application/json");
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const response = await fetch(url, { ...init, headers });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(typeof data?.detail === "string" ? data.detail : "Village Chat is temporarily unavailable");
   return data as T;
@@ -29,7 +30,12 @@ async function jsonRequest<T>(url: string, init?: RequestInit): Promise<T> {
 
 export default function VillageChat() {
   const [open, setOpen] = useState(false);
-  const [profile, setProfile] = useState<ChatProfile | null>(null);
+  const [authMode, setAuthMode] = useState<AuthMode>("signin");
+  const [account, setAccount] = useState<ChatAccount | null>(null);
+  const [token, setToken] = useState("");
+  const [sessionChecking, setSessionChecking] = useState(true);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [navHost, setNavHost] = useState<Element | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [status, setStatus] = useState<"connecting" | "live" | "offline">("connecting");
@@ -39,23 +45,31 @@ export default function VillageChat() {
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(PROFILE_KEY);
-      if (raw) setProfile(JSON.parse(raw));
-    } catch {
-      localStorage.removeItem(PROFILE_KEY);
+    setNavHost(document.querySelector(".nav-links"));
+    const stored = localStorage.getItem(TOKEN_KEY);
+    if (!stored) {
+      setSessionChecking(false);
+      return;
     }
+    setToken(stored);
+    jsonRequest<ChatAccount>(`${CHAT_API}/api/kgm-chat/auth/me`, undefined, stored)
+      .then((user) => setAccount(user))
+      .catch(() => {
+        localStorage.removeItem(TOKEN_KEY);
+        setToken("");
+      })
+      .finally(() => setSessionChecking(false));
   }, []);
 
   const lastId = messages.length ? messages[messages.length - 1].id : "";
 
   useEffect(() => {
-    if (!open || !profile) return;
+    if (!open || !account || !token) return;
     let stopped = false;
     const load = async (incremental: boolean) => {
       try {
         const cursor = incremental && lastId ? `&after=${encodeURIComponent(lastId)}` : "";
-        const data = await jsonRequest<{ items: ChatMessage[] }>(`${CHAT_API}/api/kgm-chat/messages?client_id=${encodeURIComponent(profile.clientId)}&limit=100${cursor}`);
+        const data = await jsonRequest<{ items: ChatMessage[] }>(`${CHAT_API}/api/kgm-chat/messages?limit=100${cursor}`, undefined, token);
         if (stopped) return;
         setStatus("live");
         setError("");
@@ -75,7 +89,7 @@ export default function VillageChat() {
     load(false);
     const timer = window.setInterval(() => load(true), 2500);
     return () => { stopped = true; window.clearInterval(timer); };
-  }, [open, profile, lastId]);
+  }, [open, account, token, lastId]);
 
   useEffect(() => {
     if (!open) return;
@@ -87,31 +101,76 @@ export default function VillageChat() {
     return acc;
   }, {}), [messages]);
 
-  function saveProfile(event: FormEvent<HTMLFormElement>) {
+  function openChat(mode?: AuthMode) {
+    if (mode) setAuthMode(mode);
+    setError("");
+    setOpen(true);
+  }
+
+  async function handleAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const nickname = String(data.get("nickname") || "").trim();
-    const role = String(data.get("role") || "Adult") as ChatRole;
-    const agreed = data.get("safe") === "on";
-    if (!nickname || !agreed) {
-      setError("Choose a nickname and accept the public-room safety rule.");
+    if (authBusy) return;
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const email = String(data.get("email") || "").trim();
+    const password = String(data.get("password") || "");
+    if (!email || password.length < 4) {
+      setError("Enter an email and a password with at least 4 characters.");
       return;
     }
-    const next: ChatProfile = { nickname: nickname.slice(0, 24), role, clientId: profile?.clientId || createClientId() };
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(next));
-    setProfile(next);
+    if (authMode === "register" && data.get("safe") !== "on") {
+      setError("Please accept the public-room safety rule.");
+      return;
+    }
+    setAuthBusy(true);
+    setError("");
+    try {
+      const payload = authMode === "register"
+        ? {
+            email,
+            password,
+            nickname: String(data.get("nickname") || "").trim(),
+            role: String(data.get("role") || "Adult") as ChatRole,
+          }
+        : { email, password };
+      const result = await jsonRequest<AuthResponse>(
+        `${CHAT_API}/api/kgm-chat/auth/${authMode === "register" ? "register" : "login"}`,
+        { method: "POST", body: JSON.stringify(payload) },
+      );
+      localStorage.setItem(TOKEN_KEY, result.token);
+      setToken(result.token);
+      setAccount(result.user);
+      setMessages([]);
+      setStatus("connecting");
+      form.reset();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not sign in");
+    } finally {
+      setAuthBusy(false);
+    }
+  }
+
+  function signOut() {
+    localStorage.removeItem(TOKEN_KEY);
+    setToken("");
+    setAccount(null);
+    setMessages([]);
+    setDraft("");
+    setReported(new Set());
+    setStatus("connecting");
+    setAuthMode("signin");
     setError("");
   }
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!profile || !draft.trim() || sending) return;
+    if (!account || !token || !draft.trim() || sending) return;
     setSending(true);
     try {
       const message = await jsonRequest<ChatMessage>(`${CHAT_API}/api/kgm-chat/messages`, {
         method: "POST",
-        body: JSON.stringify({ nickname: profile.nickname, role: profile.role, text: draft.trim(), client_id: profile.clientId }),
-      });
+        body: JSON.stringify({ text: draft.trim() }),
+      }, token);
       setMessages((current) => [...current.filter((item) => item.id !== message.id), message].slice(-120));
       setDraft("");
       setStatus("live");
@@ -124,12 +183,12 @@ export default function VillageChat() {
   }
 
   async function reportMessage(message: ChatMessage) {
-    if (!profile || reported.has(message.id)) return;
+    if (!token || reported.has(message.id)) return;
     try {
       const result = await jsonRequest<{ hidden?: boolean }>(`${CHAT_API}/api/kgm-chat/messages/${message.id}/report`, {
         method: "POST",
-        body: JSON.stringify({ client_id: profile.clientId, reason: "Reported from KGM Village Chat" }),
-      });
+        body: JSON.stringify({ reason: "Reported from KGM Village Chat" }),
+      }, token);
       setReported((current) => new Set(current).add(message.id));
       if (result.hidden) setMessages((current) => current.filter((item) => item.id !== message.id));
     } catch (err) {
@@ -138,44 +197,58 @@ export default function VillageChat() {
   }
 
   async function deleteMessage(message: ChatMessage) {
-    if (!profile || !message.mine) return;
+    if (!token || !message.mine) return;
     try {
-      await jsonRequest(`${CHAT_API}/api/kgm-chat/messages/${message.id}/delete`, {
-        method: "POST",
-        body: JSON.stringify({ client_id: profile.clientId }),
-      });
+      await jsonRequest(`${CHAT_API}/api/kgm-chat/messages/${message.id}/delete`, { method: "POST" }, token);
       setMessages((current) => current.filter((item) => item.id !== message.id));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not delete this message");
     }
   }
 
+  const headerControls = navHost ? createPortal(<>
+    <button className="kgm-chat-nav-link" type="button" onClick={() => openChat()}>Village Chat</button>
+    <button className="kgm-account-nav-link" type="button" onClick={() => openChat("signin")}>{account ? account.nickname : "Sign in"}</button>
+  </>, navHost) : null;
+
   return (
     <>
-      <button className="village-chat-launcher" onClick={() => setOpen(true)} aria-label="Open Koratlagudem Village Chat">
+      {headerControls}
+      <button className="village-chat-launcher" onClick={() => openChat()} aria-label="Open Koratlagudem Village Chat">
         <span className="village-chat-pulse" aria-hidden="true" />
         <span className="village-chat-icon" aria-hidden="true">☺</span>
-        <span><strong>Village Chat</strong><small>మన ఊరి మాటలు</small></span>
+        <span><strong>Village Chat</strong><small>{account ? "మన ఊరి మాటలు · Live" : "Sign in / Register"}</small></span>
       </button>
 
       {open && <div className="village-chat-shell" role="dialog" aria-modal="true" aria-label="Koratlagudem Village Chat">
         <header className="village-chat-head">
-          <div><span className={`chat-status ${status}`} /><div><strong>KGM Village Chat</strong><small>{status === "live" ? "Live public room · Koratlagudem" : status === "offline" ? "Trying to reconnect…" : "Connecting…"}</small></div></div>
+          <div><span className={`chat-status ${account ? status : "connecting"}`} /><div><strong>KGM Village Chat</strong><small>{!account ? "Sign in to join our village room" : status === "live" ? "Live public room · Koratlagudem" : status === "offline" ? "Trying to reconnect…" : "Connecting…"}</small></div></div>
           <button onClick={() => setOpen(false)} aria-label="Close chat">×</button>
         </header>
 
-        {!profile ? <form className="village-chat-join" onSubmit={saveProfile}>
-          <span className="chat-kicker">WELCOME · స్వాగతం</span>
-          <h2>Talk to our village.</h2>
-          <p>This is one shared public room for children, teens and adults. Use a nickname—never your phone number, email, address or school details.</p>
-          <label>Nickname<input name="nickname" required maxLength={24} placeholder="e.g. CuriousKiran" autoComplete="off" /></label>
-          <fieldset><legend>I am joining as</legend><div className="chat-role-options">{(["Child", "Teen", "Adult"] as ChatRole[]).map((role) => <label key={role}><input type="radio" name="role" value={role} defaultChecked={role === "Adult"} /><span>{role}</span></label>)}</div></fieldset>
-          <label className="chat-safe-check"><input type="checkbox" name="safe" required /><span>I’ll keep the room friendly and won’t share personal contact information.</span></label>
-          <button className="chat-join-button" type="submit">Enter Village Chat →</button>
-          {error && <p className="chat-error">{error}</p>}
-        </form> : <>
+        {!account ? <div className="village-chat-auth">
+          <div className="chat-auth-tabs" role="tablist" aria-label="KGM account access">
+            <button type="button" className={authMode === "signin" ? "active" : ""} onClick={() => { setAuthMode("signin"); setError(""); }}>Sign in</button>
+            <button type="button" className={authMode === "register" ? "active" : ""} onClick={() => { setAuthMode("register"); setError(""); }}>Create account</button>
+          </div>
+          <form className="village-chat-join" onSubmit={handleAuth}>
+            <span className="chat-kicker">KGM ACCOUNT · మన ఊరి ఖాతా</span>
+            <h2>{authMode === "register" ? "Join our village." : "Welcome back."}</h2>
+            <p>{authMode === "register" ? "Create a simple account for Village Chat. Your email stays private; only your nickname and role appear publicly." : "Sign in with the email and password you used when creating your KGM account."}</p>
+            <label>Email<input name="email" type="email" required autoComplete="email" placeholder="you@example.com" /></label>
+            <label>Password<input name="password" type="password" required minLength={4} maxLength={64} autoComplete={authMode === "register" ? "new-password" : "current-password"} placeholder="Minimum 4 characters" /></label>
+            {authMode === "register" && <>
+              <label>Public nickname<input name="nickname" required minLength={2} maxLength={24} placeholder="e.g. CuriousKiran" autoComplete="nickname" /></label>
+              <fieldset><legend>I am joining as</legend><div className="chat-role-options">{(["Child", "Teen", "Adult"] as ChatRole[]).map((role) => <label key={role}><input type="radio" name="role" value={role} defaultChecked={role === "Adult"} /><span>{role}</span></label>)}</div></fieldset>
+              <label className="chat-safe-check"><input type="checkbox" name="safe" required /><span>I’ll keep the room friendly and won’t share personal contact information.</span></label>
+            </>}
+            <div className="chat-no-verification"><span>✓</span><p><strong>No email verification for now.</strong> Any valid email format can register immediately. Passwords are still stored securely as hashes.</p></div>
+            <button className="chat-join-button" type="submit" disabled={authBusy || sessionChecking}>{authBusy ? "Please wait…" : authMode === "register" ? "Create account & enter chat →" : "Sign in & open chat →"}</button>
+            {error && <p className="chat-error">{error}</p>}
+          </form>
+        </div> : <>
           <div className="village-chat-safety"><span>🛡</span><p><strong>Public village room.</strong> No DMs, photos, links, phone numbers or email addresses. Report anything uncomfortable.</p></div>
-          <div className="village-chat-meta"><span><b>{profile.nickname}</b> · {profile.role}</span><span>{roleCounts.Child || 0} kids · {roleCounts.Teen || 0} teens · {roleCounts.Adult || 0} adults in recent chat</span><button onClick={() => { localStorage.removeItem(PROFILE_KEY); setProfile(null); setMessages([]); }}>Change name</button></div>
+          <div className="village-chat-meta"><span><b>{account.nickname}</b> · {account.role}</span><span>{roleCounts.Child || 0} kids · {roleCounts.Teen || 0} teens · {roleCounts.Adult || 0} adults in recent chat</span><button onClick={signOut}>Sign out</button></div>
           <div className="village-chat-messages" ref={listRef} aria-live="polite">
             {!messages.length && status === "live" && <div className="chat-empty"><span>👋</span><strong>Start today’s village conversation.</strong><p>Ask about school, farming, science, sports, local events—or simply say hello.</p></div>}
             {messages.map((message) => <article className={message.mine ? "chat-message mine" : "chat-message"} key={message.id}>
