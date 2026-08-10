@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import MusicLibraryManager from "./MusicLibraryManager";
 import "./globals.css";
 import "./music.css";
+import "./music-library-manager.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +39,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <MusicLibraryManager />
       </body>
     </html>
   );
