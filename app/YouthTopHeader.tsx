@@ -13,6 +13,7 @@ export default function YouthTopHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [account, setAccount] = useState<Account | null>(null);
   const [dark, setDark] = useState(true);
+  const [chatUnread, setChatUnread] = useState(0);
 
   useEffect(() => {
     const saved = localStorage.getItem(THEME_KEY);
@@ -28,11 +29,20 @@ export default function YouthTopHeader() {
       .catch(() => setAccount(null));
   }, []);
 
+  useEffect(() => {
+    const handleUnread = (event: Event) => {
+      const count = (event as CustomEvent<{ count?: number }>).detail?.count || 0;
+      setChatUnread(Math.max(0, count));
+    };
+    window.addEventListener("kgm-chat-unread", handleUnread as EventListener);
+    return () => window.removeEventListener("kgm-chat-unread", handleUnread as EventListener);
+  }, []);
+
   function closeMenu() { setMenuOpen(false); }
 
   function jump(selector: string) {
     closeMenu();
-    const node = selector.startsWith("#") ? document.querySelector(selector) : document.querySelector(selector);
+    const node = document.querySelector(selector);
     node?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -48,6 +58,8 @@ export default function YouthTopHeader() {
     localStorage.setItem(THEME_KEY, next ? "dark" : "light");
   }
 
+  const unreadLabel = chatUnread > 99 ? "99+" : chatUnread;
+
   return (
     <header className="kgm-youth-header" aria-label="KGM Youthverse navigation">
       <div className="kgm-youth-header-inner">
@@ -62,7 +74,7 @@ export default function YouthTopHeader() {
           <button type="button" onClick={() => jump("#apps")}>Apps</button>
           <button type="button" onClick={() => jump("#music")}>Music</button>
           <button type="button" onClick={() => clickExisting(".kgm-gallery-nav-link")}>Gallery</button>
-          <button type="button" onClick={() => clickExisting(".kgm-chat-nav-link")}>Chat</button>
+          <button className={`kgm-youth-chat-link${chatUnread ? " has-unread" : ""}`} type="button" onClick={() => clickExisting(".kgm-chat-nav-link")}>Chat{chatUnread > 0 && <b className="kgm-youth-chat-badge">{unreadLabel}</b>}</button>
         </nav>
 
         <div className="kgm-youth-header-actions">
@@ -84,7 +96,7 @@ export default function YouthTopHeader() {
         <button type="button" onClick={() => jump("#apps")}><span>▦</span>Apps</button>
         <button type="button" onClick={() => jump("#music")}><span>♪</span>Music</button>
         <button type="button" onClick={() => clickExisting(".kgm-gallery-nav-link")}><span>✦</span>Gallery</button>
-        <button type="button" onClick={() => clickExisting(".kgm-chat-nav-link")}><span>◌</span>Village Chat</button>
+        <button className="kgm-youth-mobile-chat" type="button" onClick={() => clickExisting(".kgm-chat-nav-link")}><span>◌</span>Village Chat{chatUnread > 0 && <b className="kgm-youth-chat-badge">{unreadLabel}</b>}</button>
         <button type="button" onClick={() => jump("#install")}><span>↓</span>Install Android</button>
         <button type="button" onClick={() => jump("#safety")}><span>✓</span>Safety</button>
         <button type="button" onClick={() => jump("#build")}><span>＋</span>Young creators</button>

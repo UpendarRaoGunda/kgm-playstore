@@ -24,6 +24,7 @@ import "./youthverse.css";
 import "./youthverse-polish.css";
 import "./youth-top-header.css";
 import "./overlay-layer-fixes.css";
+import "./chat-notifications.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Youthverse",

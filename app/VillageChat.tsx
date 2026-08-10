@@ -8,9 +8,13 @@ type AuthMode = "signin" | "register";
 type ChatAccount = { id: string; email: string; nickname: string; role: ChatRole; email_verified: boolean; created_at: string };
 type AuthResponse = { token: string; user: ChatAccount; verification_required: boolean };
 type ChatMessage = { id: string; nickname: string; role: ChatRole; text: string; created_at: string; mine: boolean };
+type NotificationState = NotificationPermission | "unsupported";
+type BadgeNavigator = Navigator & { setAppBadge?: (contents?: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
 
 const CHAT_API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
 const TOKEN_KEY = "kgm-village-chat-token-v2";
+const NOTIFY_KEY = "kgm-village-chat-notifications-v1";
+const SEEN_KEY_PREFIX = "kgm-village-chat-seen-v1:";
 
 function timeLabel(value: string) {
   const date = new Date(value);
@@ -42,7 +46,15 @@ export default function VillageChat() {
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [reported, setReported] = useState<Set<string>>(new Set());
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [toastCount, setToastCount] = useState(0);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationState>("unsupported");
   const listRef = useRef<HTMLDivElement>(null);
+  const openRef = useRef(false);
+  const notificationsEnabledRef = useRef(false);
+  const latestIdRef = useRef("");
+  const bootstrappedRef = useRef(false);
 
   useEffect(() => {
     setNavHost(document.querySelector(".nav-links"));
@@ -61,35 +73,169 @@ export default function VillageChat() {
       .finally(() => setSessionChecking(false));
   }, []);
 
-  const lastId = messages.length ? messages[messages.length - 1].id : "";
+  useEffect(() => {
+    const permission: NotificationState = "Notification" in window ? Notification.permission : "unsupported";
+    const enabled = permission === "granted" && localStorage.getItem(NOTIFY_KEY) === "enabled";
+    setNotificationPermission(permission);
+    setNotificationsEnabled(enabled);
+    notificationsEnabledRef.current = enabled;
+  }, []);
 
   useEffect(() => {
-    if (!open || !account || !token) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("openChat") === "1") {
+      setOpen(true);
+      url.searchParams.delete("openChat");
+      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    }
+    if (!("serviceWorker" in navigator)) return;
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "OPEN_KGM_CHAT") setOpen(true);
+    };
+    navigator.serviceWorker.addEventListener("message", handleMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", handleMessage);
+  }, []);
+
+  function seenKey(accountId = account?.id) {
+    return accountId ? `${SEEN_KEY_PREFIX}${accountId}` : "";
+  }
+
+  function rememberSeen(messageId: string, accountId = account?.id) {
+    const key = seenKey(accountId);
+    if (key && messageId) localStorage.setItem(key, messageId);
+  }
+
+  useEffect(() => {
+    openRef.current = open;
+    document.documentElement.classList.toggle("kgm-chat-open", open);
+    if (open) {
+      setUnreadCount(0);
+      setToastCount(0);
+      if (latestIdRef.current) rememberSeen(latestIdRef.current);
+    }
+    return () => document.documentElement.classList.remove("kgm-chat-open");
+  }, [open, account?.id]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible" && openRef.current) {
+        setUnreadCount(0);
+        setToastCount(0);
+        if (latestIdRef.current) rememberSeen(latestIdRef.current);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [account?.id]);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("kgm-chat-unread", { detail: { count: unreadCount } }));
+    const badgeNavigator = navigator as BadgeNavigator;
+    if (unreadCount > 0) void badgeNavigator.setAppBadge?.(unreadCount).catch(() => undefined);
+    else void badgeNavigator.clearAppBadge?.().catch(() => undefined);
+  }, [unreadCount]);
+
+  useEffect(() => {
+    if (!toastCount) return;
+    const timer = window.setTimeout(() => setToastCount(0), 5500);
+    return () => window.clearTimeout(timer);
+  }, [toastCount]);
+
+  async function showSystemNotification(count: number) {
+    if (!notificationsEnabledRef.current || !("Notification" in window) || Notification.permission !== "granted") return;
+    const title = count === 1 ? "New KGM Village Chat message" : `${count} new KGM Village Chat messages`;
+    const options: NotificationOptions = {
+      body: "Open KGM to see the latest village conversation.",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
+      tag: "kgm-village-chat",
+      data: { kind: "kgm-chat" },
+    };
+    try {
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(title, options);
+      } else {
+        const notice = new Notification(title, options);
+        notice.onclick = () => {
+          window.focus();
+          setOpen(true);
+          notice.close();
+        };
+      }
+    } catch {
+      // Notification delivery is best-effort; unread badges still remain available.
+    }
+  }
+
+  useEffect(() => {
+    if (!account || !token) return;
     let stopped = false;
-    const load = async (incremental: boolean) => {
+    let timer = 0;
+    bootstrappedRef.current = false;
+    latestIdRef.current = "";
+
+    const load = async () => {
       try {
-        const cursor = incremental && lastId ? `&after=${encodeURIComponent(lastId)}` : "";
+        const cursor = bootstrappedRef.current && latestIdRef.current ? `&after=${encodeURIComponent(latestIdRef.current)}` : "";
         const data = await jsonRequest<{ items: ChatMessage[] }>(`${CHAT_API}/api/kgm-chat/messages?limit=100${cursor}`, undefined, token);
         if (stopped) return;
         setStatus("live");
         setError("");
-        if (incremental) {
+        const items = data.items || [];
+
+        if (!bootstrappedRef.current) {
+          bootstrappedRef.current = true;
+          setMessages(items.slice(-120));
+          const newest = items[items.length - 1];
+          latestIdRef.current = newest?.id || "";
+          if (openRef.current) {
+            if (newest?.id) rememberSeen(newest.id, account.id);
+          } else {
+            const savedSeen = localStorage.getItem(seenKey(account.id));
+            const seenIndex = savedSeen ? items.findIndex((message) => message.id === savedSeen) : -1;
+            if (seenIndex >= 0) {
+              const missed = items.slice(seenIndex + 1).filter((message) => !message.mine);
+              if (missed.length) setUnreadCount(missed.length);
+            }
+          }
+        } else if (items.length) {
+          const newest = items[items.length - 1];
+          latestIdRef.current = newest.id;
           setMessages((current) => {
             const known = new Set(current.map((message) => message.id));
-            return [...current, ...data.items.filter((message) => !known.has(message.id))].slice(-120);
+            return [...current, ...items.filter((message) => !known.has(message.id))].slice(-120);
           });
-        } else setMessages(data.items);
+
+          const incoming = items.filter((message) => !message.mine);
+          const needsAttention = incoming.length > 0 && (!openRef.current || document.visibilityState !== "visible");
+          if (needsAttention) {
+            setUnreadCount((current) => Math.min(99, current + incoming.length));
+            if (document.visibilityState === "visible" && !openRef.current) {
+              setToastCount((current) => Math.min(99, current + incoming.length));
+            } else {
+              void showSystemNotification(incoming.length);
+            }
+          } else if (openRef.current && document.visibilityState === "visible") {
+            rememberSeen(newest.id, account.id);
+          }
+        }
       } catch (err) {
         if (!stopped) {
           setStatus("offline");
-          setError(err instanceof Error ? err.message : "Could not reach Village Chat");
+          if (openRef.current) setError(err instanceof Error ? err.message : "Could not reach Village Chat");
         }
+      } finally {
+        if (!stopped) timer = window.setTimeout(load, openRef.current ? 2500 : 5000);
       }
     };
-    load(false);
-    const timer = window.setInterval(() => load(true), 2500);
-    return () => { stopped = true; window.clearInterval(timer); };
-  }, [open, account, token, lastId]);
+
+    void load();
+    return () => {
+      stopped = true;
+      window.clearTimeout(timer);
+    };
+  }, [account?.id, token]);
 
   useEffect(() => {
     if (!open) return;
@@ -105,6 +251,34 @@ export default function VillageChat() {
     if (mode) setAuthMode(mode);
     setError("");
     setOpen(true);
+  }
+
+  async function toggleNotifications() {
+    if (notificationsEnabled) {
+      localStorage.setItem(NOTIFY_KEY, "disabled");
+      notificationsEnabledRef.current = false;
+      setNotificationsEnabled(false);
+      return;
+    }
+    if (!("Notification" in window)) {
+      setNotificationPermission("unsupported");
+      setError("This browser does not support chat notifications. Unread badges will still work.");
+      return;
+    }
+    let permission = Notification.permission;
+    if (permission === "default") permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+    if (permission === "granted") {
+      localStorage.setItem(NOTIFY_KEY, "enabled");
+      notificationsEnabledRef.current = true;
+      setNotificationsEnabled(true);
+      setError("");
+    } else {
+      localStorage.setItem(NOTIFY_KEY, "disabled");
+      notificationsEnabledRef.current = false;
+      setNotificationsEnabled(false);
+      setError("Browser notifications are blocked. You can still use the unread badge, or allow notifications in your browser settings.");
+    }
   }
 
   async function handleAuth(event: FormEvent<HTMLFormElement>) {
@@ -126,12 +300,7 @@ export default function VillageChat() {
     setError("");
     try {
       const payload = authMode === "register"
-        ? {
-            email,
-            password,
-            nickname: String(data.get("nickname") || "").trim(),
-            role: String(data.get("role") || "Adult") as ChatRole,
-          }
+        ? { email, password, nickname: String(data.get("nickname") || "").trim(), role: String(data.get("role") || "Adult") as ChatRole }
         : { email, password };
       const result = await jsonRequest<AuthResponse>(
         `${CHAT_API}/api/kgm-chat/auth/${authMode === "register" ? "register" : "login"}`,
@@ -141,6 +310,7 @@ export default function VillageChat() {
       setToken(result.token);
       setAccount(result.user);
       setMessages([]);
+      setUnreadCount(0);
       setStatus("connecting");
       form.reset();
     } catch (err) {
@@ -157,9 +327,13 @@ export default function VillageChat() {
     setMessages([]);
     setDraft("");
     setReported(new Set());
+    setUnreadCount(0);
+    setToastCount(0);
     setStatus("connecting");
     setAuthMode("signin");
     setError("");
+    latestIdRef.current = "";
+    bootstrappedRef.current = false;
   }
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
@@ -172,6 +346,7 @@ export default function VillageChat() {
         body: JSON.stringify({ text: draft.trim() }),
       }, token);
       setMessages((current) => [...current.filter((item) => item.id !== message.id), message].slice(-120));
+      rememberSeen(message.id, account.id);
       setDraft("");
       setStatus("live");
       setError("");
@@ -206,19 +381,27 @@ export default function VillageChat() {
     }
   }
 
+  const unreadLabel = unreadCount > 99 ? "99+" : String(unreadCount);
   const headerControls = navHost ? createPortal(<>
-    <button className="kgm-chat-nav-link" type="button" onClick={() => openChat()}>Village Chat</button>
+    <button className="kgm-chat-nav-link" type="button" onClick={() => openChat()}>Village Chat{unreadCount > 0 && <span className="kgm-chat-unread-inline">{unreadLabel}</span>}</button>
     <button className="kgm-account-nav-link" type="button" onClick={() => openChat("signin")}>{account ? account.nickname : "Sign in"}</button>
   </>, navHost) : null;
 
   return (
     <>
       {headerControls}
-      <button className="village-chat-launcher" onClick={() => openChat()} aria-label="Open Koratlagudem Village Chat">
+      <button className="village-chat-launcher" onClick={() => openChat()} aria-label={`Open Koratlagudem Village Chat${unreadCount ? `, ${unreadCount} unread messages` : ""}`}>
         <span className="village-chat-pulse" aria-hidden="true" />
         <span className="village-chat-icon" aria-hidden="true">☺</span>
         <span><strong>Village Chat</strong><small>{account ? "మన ఊరి మాటలు · Live" : "Sign in / Register"}</small></span>
+        {unreadCount > 0 && <b className="village-chat-unread-badge" aria-label={`${unreadCount} unread messages`}>{unreadLabel}</b>}
       </button>
+
+      {!open && toastCount > 0 && <button className="kgm-chat-toast" type="button" onClick={() => openChat()}>
+        <span aria-hidden="true">💬</span>
+        <div><strong>{toastCount === 1 ? "New Village Chat message" : `${toastCount} new Village Chat messages`}</strong><small>Tap to open KGM Village Chat.</small></div>
+        <b>{toastCount > 99 ? "99+" : toastCount}</b>
+      </button>}
 
       {open && <div className="village-chat-shell" role="dialog" aria-modal="true" aria-label="Koratlagudem Village Chat">
         <header className="village-chat-head">
@@ -248,7 +431,16 @@ export default function VillageChat() {
           </form>
         </div> : <>
           <div className="village-chat-safety"><span>🛡</span><p><strong>Public village room.</strong> No DMs, photos, links, phone numbers or email addresses. Report anything uncomfortable.</p></div>
-          <div className="village-chat-meta"><span><b>{account.nickname}</b> · {account.role}</span><span>{roleCounts.Child || 0} kids · {roleCounts.Teen || 0} teens · {roleCounts.Adult || 0} adults in recent chat</span><button onClick={signOut}>Sign out</button></div>
+          <div className="village-chat-meta">
+            <span><b>{account.nickname}</b> · {account.role}</span>
+            <span>{roleCounts.Child || 0} kids · {roleCounts.Teen || 0} teens · {roleCounts.Adult || 0} adults in recent chat</span>
+            <div className="village-chat-meta-actions">
+              <button className={`chat-notification-toggle${notificationsEnabled ? " enabled" : ""}`} type="button" onClick={toggleNotifications} title="Browser notifications use generic text so message content is not shown on your lock screen">
+                {notificationsEnabled ? "🔔 Alerts on" : notificationPermission === "denied" ? "🔕 Alerts blocked" : "🔔 Notify me"}
+              </button>
+              <button type="button" onClick={signOut}>Sign out</button>
+            </div>
+          </div>
           <div className="village-chat-messages" ref={listRef} aria-live="polite">
             {!messages.length && status === "live" && <div className="chat-empty"><span>👋</span><strong>Start today’s village conversation.</strong><p>Ask about school, farming, science, sports, local events—or simply say hello.</p></div>}
             {messages.map((message) => <article className={message.mine ? "chat-message mine" : "chat-message"} key={message.id}>
