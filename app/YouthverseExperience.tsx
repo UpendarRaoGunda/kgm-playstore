@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 
 type UploadKind = "image" | "audio" | "video" | "apk";
@@ -88,6 +88,11 @@ export default function YouthverseExperience() {
     (document.querySelector(selector) as HTMLElement | null)?.click();
   }
 
+  function openUpload() {
+    clickExisting(".kgm-gallery-nav-link");
+    window.setTimeout(() => clickExisting(".kgm-gallery-upload-button"), 80);
+  }
+
   function jump(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -110,7 +115,7 @@ export default function YouthverseExperience() {
             <p>{account ? `Yo ${account.nickname} 👋 what are we creating today?` : "Apps, music, photos, videos and ideas from a village that refuses to think small."}</p>
             <div className="yv-actions">
               <button type="button" className="yv-primary" onClick={() => clickExisting(".kgm-gallery-nav-link")}>Explore KGM <span>↗</span></button>
-              <button type="button" className="yv-secondary" onClick={() => clickExisting(".kgm-gallery-nav-link")}>＋ Drop something</button>
+              <button type="button" className="yv-secondary" onClick={openUpload}>＋ Drop something</button>
             </div>
             <div className="yv-pills">
               <button onClick={() => jump("apps")}>🎮 Apps</button>
@@ -136,14 +141,14 @@ export default function YouthverseExperience() {
           <div className="yv-section-head"><div><span>🔥 TRENDING IN KGM</span><h2>Fresh drops from the village.</h2></div><button onClick={() => clickExisting(".kgm-gallery-nav-link")}>See all ↗</button></div>
           <div className="yv-drop-row">
             {latest.length ? latest.map((item, index) => (
-              <button className={`yv-drop yv-kind-${item.kind}`} key={item.id} onClick={() => clickExisting(".kgm-gallery-nav-link")} style={{"--yv-i": index} as React.CSSProperties}>
+              <button className={`yv-drop yv-kind-${item.kind}`} key={item.id} onClick={() => clickExisting(".kgm-gallery-nav-link")} style={{"--yv-i": index} as CSSProperties}>
                 <span className="yv-drop-glyph">{kindGlyph(item.kind)}</span>
                 <small>{item.kind === "audio" ? "MUSIC DROP" : item.kind === "apk" ? "COMMUNITY APK" : `${item.kind.toUpperCase()} DROP`}</small>
                 <strong>{item.title}</strong>
                 <em>by {item.uploader.nickname}</em>
               </button>
             )) : fallbackDrops.map((item, index) => (
-              <button className={`yv-drop yv-kind-${item.kind}`} key={item.title} onClick={() => item.kind === "audio" ? jump("music") : item.kind === "apk" ? jump("apps") : clickExisting(".kgm-gallery-nav-link")} style={{"--yv-i": index} as React.CSSProperties}>
+              <button className={`yv-drop yv-kind-${item.kind}`} key={item.title} onClick={() => item.kind === "audio" ? jump("music") : item.kind === "apk" ? jump("apps") : clickExisting(".kgm-gallery-nav-link")} style={{"--yv-i": index} as CSSProperties}>
                 <span className="yv-drop-glyph">{item.glyph}</span><small>{item.kicker}</small><strong>{item.title}</strong><em>{item.meta}</em>
               </button>
             ))}
@@ -163,7 +168,7 @@ export default function YouthverseExperience() {
         <section className="yv-section yv-creators">
           <div className="yv-section-head"><div><span>CREATORS OF KGM</span><h2>People are the platform.</h2></div><span className="yv-founder-note">FOUNDING CREW</span></div>
           <div className="yv-creator-grid">
-            {creators.map((creator, index) => <article className="yv-creator" key={creator.name} style={{"--yv-i": index} as React.CSSProperties}><div className="yv-avatar">{creator.glyph}</div><div><small>{creator.label}</small><strong>{creator.name}</strong><span>{creator.vibe}</span></div><b>FOUNDING MEMBER</b></article>)}
+            {creators.map((creator, index) => <article className="yv-creator" key={creator.name} style={{"--yv-i": index} as CSSProperties}><div className="yv-avatar">{creator.glyph}</div><div><small>{creator.label}</small><strong>{creator.name}</strong><span>{creator.vibe}</span></div><b>FOUNDING MEMBER</b></article>)}
             <button className="yv-creator yv-creator-join" onClick={() => clickExisting(".kgm-account-nav-link")}><div className="yv-avatar">＋</div><div><small>YOUR TURN</small><strong>Join the creator wall</strong><span>Sign in · upload · build</span></div><b>START ↗</b></button>
           </div>
         </section>
@@ -172,7 +177,7 @@ export default function YouthverseExperience() {
       <nav className="yv-mobile-dock" aria-label="KGM mobile navigation">
         <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><span>⌂</span><small>Home</small></button>
         <button onClick={() => clickExisting(".kgm-gallery-nav-link")}><span>◉</span><small>Explore</small></button>
-        <button className="yv-upload-dock" onClick={() => clickExisting(".kgm-gallery-nav-link")}><span>＋</span><small>Upload</small></button>
+        <button className="yv-upload-dock" onClick={openUpload}><span>＋</span><small>Upload</small></button>
         <button onClick={() => clickExisting(".kgm-chat-nav-link")}><span>◌</span><small>Chat</small></button>
         <button onClick={() => clickExisting(".kgm-account-nav-link")}><span>☺</span><small>Me</small></button>
       </nav>
