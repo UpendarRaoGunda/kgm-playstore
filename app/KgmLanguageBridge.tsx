@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const LANG_KEY = "kgm-language-v2";
-
 type Dict = Record<string, string>;
 
 const te: Dict = {
@@ -19,8 +18,6 @@ const te: Dict = {
   "Safety": "భద్రత",
   "Young creators": "యువ సృష్టికర్తలు",
   "Sign in / Register": "సైన్ ఇన్ / నమోదు",
-  "MADE HERE.": "ఇక్కడే సృష్టించాం.",
-  "SHARED EVERYWHERE.": "ప్రపంచంతో పంచుకుంటాం.",
   "Watch Science Cinema": "సైన్స్ సినిమా చూడండి",
   "＋ Drop something": "＋ మీ సృష్టిని పంచుకోండి",
   "KGM° · KORATLAGUDEM'S DIGITAL PLAYGROUND": "KGM° · కొరట్లగూడెం డిజిటల్ ఆటస్థలం",
@@ -33,7 +30,6 @@ const te: Dict = {
   "People are the platform.": "మనుషులే మన వేదిక.",
   "KGM SCIENCE CINEMA": "KGM సైన్స్ సినిమా",
   "STEM ONLY · FREE KNOWLEDGE": "STEM మాత్రమే · ఉచిత జ్ఞానం",
-  "Discover": "అన్వేషించండి",
   "Space": "అంతరిక్షం",
   "Physics": "భౌతిక శాస్త్రం",
   "Life": "జీవశాస్త్రం",
@@ -63,7 +59,6 @@ const selectors = [
   ".kgm-youth-nav button",
   ".kgm-youth-mobile-menu button",
   ".yv-kicker",
-  ".yv-hero-copy h1",
   ".yv-actions button",
   ".yv-section-head span",
   ".yv-section-head h2",
@@ -80,6 +75,10 @@ const selectors = [
   ".kgm-cinema-learning-panel h4",
 ].join(",");
 
+function setText(node: HTMLElement, value: string) {
+  if (node.textContent !== value) node.textContent = value;
+}
+
 function translateElement(el: Element, lang: "en" | "te") {
   const node = el as HTMLElement;
   if (!node.dataset.kgmOriginalText) node.dataset.kgmOriginalText = node.textContent?.trim() || "";
@@ -87,13 +86,9 @@ function translateElement(el: Element, lang: "en" | "te") {
   if (!original) return;
   if (lang === "te") {
     const exact = te[original];
-    if (exact) node.textContent = exact;
-    else if (original.startsWith("Yo ") && original.includes("what are we creating or learning today?")) {
-      const name = original.replace(/^Yo\s+/, "").split("👋")[0].trim();
-      node.textContent = `హాయ్ ${name} 👋 ఈ రోజు మనం ఏమి సృష్టించాలి లేదా నేర్చుకోవాలి?`;
-    }
+    if (exact) setText(node, exact);
   } else {
-    node.textContent = original;
+    setText(node, original);
   }
 }
 
@@ -105,28 +100,32 @@ function applyLanguage(lang: "en" | "te") {
   const hero = document.querySelector(".yv-hero-copy h1") as HTMLElement | null;
   if (hero) {
     if (!hero.dataset.kgmOriginalHtml) hero.dataset.kgmOriginalHtml = hero.innerHTML;
-    hero.innerHTML = lang === "te"
+    const value = lang === "te"
       ? '<span>ఇక్కడే సృష్టించాం.</span><br/><em>ప్రపంచంతో పంచుకుంటాం.</em>'
       : hero.dataset.kgmOriginalHtml;
+    if (hero.innerHTML !== value) hero.innerHTML = value;
   }
 
   const heroP = document.querySelector(".yv-hero-copy > p") as HTMLElement | null;
   if (heroP) {
     if (!heroP.dataset.kgmOriginalText) heroP.dataset.kgmOriginalText = heroP.textContent?.trim() || "";
+    const original = heroP.dataset.kgmOriginalText || "";
+    let value = original;
     if (lang === "te") {
-      const original = heroP.dataset.kgmOriginalText || "";
       if (original.startsWith("Yo ")) {
         const name = original.replace(/^Yo\s+/, "").split("👋")[0].trim();
-        heroP.textContent = `హాయ్ ${name} 👋 ఈ రోజు మనం ఏమి సృష్టించాలి లేదా నేర్చుకోవాలి?`;
+        value = `హాయ్ ${name} 👋 ఈ రోజు మనం ఏమి సృష్టించాలి లేదా నేర్చుకోవాలి?`;
       } else {
-        heroP.textContent = "యాప్స్, సైన్స్ సినిమా, సంగీతం, ఫోటోలు, వీడియోలు, ఆలోచనలు — చిన్న గ్రామం నుంచి పెద్ద ప్రపంచానికి.";
+        value = "యాప్స్, సైన్స్ సినిమా, సంగీతం, ఫోటోలు, వీడియోలు, ఆలోచనలు — చిన్న గ్రామం నుంచి పెద్ద ప్రపంచానికి.";
       }
-    } else heroP.textContent = heroP.dataset.kgmOriginalText || "";
+    }
+    setText(heroP, value);
   }
 }
 
 export default function KgmLanguageBridge() {
   const [lang, setLang] = useState<"en" | "te">("en");
+  const scheduled = useRef<number | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(LANG_KEY) === "te" ? "te" : "en";
@@ -135,11 +134,20 @@ export default function KgmLanguageBridge() {
 
     const onToggle = () => setLang((current) => current === "en" ? "te" : "en");
     window.addEventListener("kgm-toggle-language", onToggle);
-    const observer = new MutationObserver(() => applyLanguage(localStorage.getItem(LANG_KEY) === "te" ? "te" : "en"));
+
+    const observer = new MutationObserver(() => {
+      if (scheduled.current) return;
+      scheduled.current = window.requestAnimationFrame(() => {
+        scheduled.current = null;
+        applyLanguage(localStorage.getItem(LANG_KEY) === "te" ? "te" : "en");
+      });
+    });
     observer.observe(document.body, { childList: true, subtree: true });
+
     return () => {
       window.removeEventListener("kgm-toggle-language", onToggle);
       observer.disconnect();
+      if (scheduled.current) cancelAnimationFrame(scheduled.current);
     };
   }, []);
 
@@ -147,12 +155,6 @@ export default function KgmLanguageBridge() {
     localStorage.setItem(LANG_KEY, lang);
     applyLanguage(lang);
     window.dispatchEvent(new CustomEvent("kgm-language-changed", { detail: { lang } }));
-    const legacy = document.querySelector(".language-button") as HTMLButtonElement | null;
-    if (legacy && !legacy.dataset.kgmBridgeSynced) {
-      legacy.dataset.kgmBridgeSynced = "1";
-      try { legacy.click(); } catch { /* legacy language sync is best effort */ }
-      delete legacy.dataset.kgmBridgeSynced;
-    }
   }, [lang]);
 
   return null;
