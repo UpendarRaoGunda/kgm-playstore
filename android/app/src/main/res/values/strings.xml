@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">KGM Playstore</string>
+    <string name="offline_title">KGM is waiting for a connection</string>
+    <string name="offline_message">Connect to the internet, then retry to open the Koratlagudem community app.</string>
+    <string name="retry">Retry</string>
+    <string name="no_file_picker">No file picker is available on this device.</string>
+    <string name="download_description">Downloading from KGM Playstore</string>
+    <string name="download_started">Download started. Open it from your notification when it finishes.</string>
+    <string name="cannot_open_link">This link cannot be opened on this device.</string>
+    <string name="storage_permission_needed">Storage access is needed to save this download.</string>
+</resources>
