@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { isKgmAvatarUpload } from "./KgmAvatar";
 
 type ShelfKind = "all" | "image" | "audio" | "video" | "apk";
 type UploadItem = {
@@ -57,7 +58,8 @@ export default function CommunityShelf() {
       const response = await fetch(`${API}/api/kgm-uploads?kind=all&limit=100`, { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(typeof data?.detail === "string" ? data.detail : "Could not load community uploads");
-      setItems(Array.isArray(data.items) ? data.items : []);
+      const publicItems = Array.isArray(data.items) ? data.items.filter((item: UploadItem) => !isKgmAvatarUpload(item)) : [];
+      setItems(publicItems);
       setError("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load community uploads");
