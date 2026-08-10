@@ -64,6 +64,18 @@ export default function YouthTopHeader() {
   }, []);
 
   useEffect(() => {
+    let previousToken = localStorage.getItem(TOKEN_KEY) || "";
+    const timer = window.setInterval(() => {
+      const currentToken = localStorage.getItem(TOKEN_KEY) || "";
+      if (currentToken === previousToken) return;
+      previousToken = currentToken;
+      void syncAccount();
+    }, 600);
+    return () => window.clearInterval(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     const handleUnread = (event: Event) => {
       const count = (event as CustomEvent<{ count?: number }>).detail?.count || 0;
       setChatUnread(Math.max(0, count));
