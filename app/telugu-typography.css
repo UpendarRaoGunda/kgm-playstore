@@ -116,3 +116,83 @@
   .hero h1:has(> span){font-size:clamp(34px,10.4vw,44px);line-height:1.3}
   .hero h1:has(> span)>span,.hero h1:has(> span)>em{line-height:1.28}
 }
+
+/* Youthverse Telugu mode: the redesigned hero must not inherit Impact/.80 line-height. */
+.kgm-lang-te .yv-hero-copy h1{
+  max-width:920px;
+  margin:24px 0 28px;
+  font-family:var(--kgm-telugu-font)!important;
+  font-size:clamp(50px,6.1vw,88px)!important;
+  font-weight:800!important;
+  font-style:normal!important;
+  line-height:1.24!important;
+  letter-spacing:0!important;
+  word-spacing:.02em;
+  text-transform:none!important;
+  text-wrap:balance;
+  overflow:visible;
+}
+.kgm-lang-te .yv-hero-copy h1 br{display:none}
+.kgm-lang-te .yv-hero-copy h1>span,
+.kgm-lang-te .yv-hero-copy h1>em{
+  display:block;
+  width:auto;
+  max-width:100%;
+  font-family:inherit!important;
+  font-style:normal!important;
+  line-height:1.28!important;
+  letter-spacing:0!important;
+  white-space:normal;
+  overflow:visible;
+}
+.kgm-lang-te .yv-hero-copy h1>span{color:#f8f7ff;font-weight:800}
+.kgm-lang-te .yv-hero-copy h1>em{
+  margin:.09em 0 0;
+  font-size:.94em;
+  font-weight:800;
+  background:linear-gradient(90deg,var(--yv-lime) 0%,var(--yv-cyan) 42%,#a988ff 78%,var(--yv-pink) 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.kgm-lang-te .yv-hero-copy>p{
+  font-family:var(--kgm-telugu-font)!important;
+  line-height:1.78!important;
+  letter-spacing:0!important;
+  word-spacing:.02em;
+}
+.kgm-lang-te .yv-kicker,
+.kgm-lang-te .yv-live,
+.kgm-lang-te .yv-primary,
+.kgm-lang-te .yv-secondary,
+.kgm-lang-te .yv-section-head,
+.kgm-lang-te .yv-mobile-dock{
+  font-family:var(--kgm-telugu-font),system-ui,sans-serif;
+  letter-spacing:0;
+}
+
+@media(max-width:760px){
+  .kgm-lang-te .yv-hero-copy h1{
+    width:100%;
+    max-width:100%;
+    margin:20px 0 20px;
+    font-size:clamp(40px,11.8vw,58px)!important;
+    line-height:1.3!important;
+  }
+  .kgm-lang-te .yv-hero-copy h1>span,
+  .kgm-lang-te .yv-hero-copy h1>em{
+    line-height:1.32!important;
+    padding-block:.03em;
+  }
+  .kgm-lang-te .yv-hero-copy h1>em{margin-top:.12em;font-size:.91em}
+  .kgm-lang-te .yv-hero-copy>p{font-size:15px!important;line-height:1.75!important}
+}
+
+@media(max-width:420px){
+  .kgm-lang-te .yv-hero-copy h1{
+    font-size:clamp(36px,10.8vw,48px)!important;
+    line-height:1.34!important;
+  }
+  .kgm-lang-te .yv-hero-copy h1>span,
+  .kgm-lang-te .yv-hero-copy h1>em{line-height:1.36!important}
+}
