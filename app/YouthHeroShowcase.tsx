@@ -37,6 +37,21 @@ export default function YouthHeroShowcase() {
     };
   }, []);
 
+  useEffect(() => {
+    const hero = document.querySelector<HTMLElement>(".yv-hero-grid-simple");
+    if (!hero || !("IntersectionObserver" in window)) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      document.body.classList.toggle("kgm-hero-in-view", Boolean(entry?.isIntersecting));
+    }, { threshold: 0.16 });
+
+    observer.observe(hero);
+    return () => {
+      observer.disconnect();
+      document.body.classList.remove("kgm-hero-in-view");
+    };
+  }, [host]);
+
   function click(selector: string) {
     (document.querySelector(selector) as HTMLElement | null)?.click();
   }
@@ -50,75 +65,70 @@ export default function YouthHeroShowcase() {
   }
 
   const showcase = (
-    <aside className="yv-transmission" aria-label="Explore the KGM Youthverse">
-      <div className="yv-transmission-grid" aria-hidden="true" />
-      <div className="yv-transmission-glow" aria-hidden="true" />
+    <aside className="yv-transmission yv-transmission-v3" aria-label="Koratlagudem creations shared everywhere through KGM">
+      <div className="yv-tx-scan" aria-hidden="true"><i/><i/><i/><i/></div>
+      <div className="yv-tx-glow" aria-hidden="true" />
 
-      <div className="yv-transmission-meta">
-        <span className="yv-transmission-live"><i /> LIVE FROM KORATLAGUDEM</span>
-        <span>KGM° / YOUTHVERSE</span>
+      <div className="yv-tx-meta">
+        <span className="yv-tx-live"><i /> LIVE FROM KORATLAGUDEM</span>
+        <span>KGM° · YOUTHVERSE</span>
       </div>
 
-      <div className="yv-transmission-stage">
-        <div className="yv-transmission-origin">
-          <small>ORIGIN</small>
-          <strong>KORATLAGUDEM</strong>
-          <span>TELANGANA · INDIA</span>
+      <div className="yv-tx-stage">
+        <div className="yv-tx-origin">
+          <span className="yv-origin-pulse" aria-hidden="true"><i/><i/></span>
+          <div>
+            <small>ORIGIN · 17.12°N 80.02°E</small>
+            <strong>KORATLAGUDEM</strong>
+            <em>TELANGANA · INDIA</em>
+          </div>
         </div>
 
-        <div className="yv-k-monolith" aria-label="KGM Youthverse">
+        <div className="yv-tx-beam" aria-hidden="true">
+          <span className="yv-tx-beam-soft" />
+          <span className="yv-tx-beam-core" />
+          <i className="yv-tx-particle p1"/><i className="yv-tx-particle p2"/><i className="yv-tx-particle p3"/><i className="yv-tx-particle p4"/>
+          <b>→</b>
+        </div>
+
+        <div className="yv-k-monolith" aria-label="KGM amplifier">
+          <div className="yv-k-shadow" aria-hidden="true" />
           <div className="yv-k-back" aria-hidden="true" />
           <div className="yv-k-face">
             <span className="yv-k-eyebrow">KGM°</span>
             <strong>K</strong>
-            <div className="yv-k-caption"><small>MADE HERE</small><b>SHARED<br/>EVERYWHERE</b></div>
+            <small>KORATLAGUDEM YOUTHVERSE</small>
           </div>
           <div className="yv-k-edge" aria-hidden="true" />
           <div className="yv-k-shine" aria-hidden="true" />
         </div>
 
-        <div className="yv-transmission-world">
-          <span className="yv-world-mark">∞</span>
-          <div><small>OPEN NETWORK</small><strong>EVERYWHERE</strong><em>Curiosity has no postcode.</em></div>
+        <div className="yv-tx-destination">
+          <span className="yv-world-network" aria-hidden="true">
+            <i className="n1"/><i className="n2"/><i className="n3"/><i className="n4"/><b/><em/>
+          </span>
+          <div>
+            <small>OPEN ACCESS · GLOBAL</small>
+            <strong>EVERYWHERE</strong>
+            <em>Ideas travel farther than their postcode.</em>
+          </div>
         </div>
 
-        <div className="yv-transmission-beam" aria-hidden="true">
-          <span className="yv-beam-line" />
-          <i className="yv-beam-dot d1" /><i className="yv-beam-dot d2" /><i className="yv-beam-dot d3" />
-          <b>→</b>
-        </div>
-
-        <div className="yv-transmission-stamp" aria-hidden="true">
-          <span>17.12° N</span><i /> <span>80.02° E</span>
+        <div className="yv-tx-proof" aria-hidden="true">
+          <span>MADE HERE</span><i/> <span>AMPLIFIED BY KGM</span><i/> <span>SHARED OUT</span>
         </div>
       </div>
 
-      <nav className="yv-transmission-rail" aria-label="KGM creative spaces">
-        <button type="button" onClick={() => jump("apps")}>
-          <span className="yv-rail-glyph apps">⌘</span>
-          <span><small>BUILD</small><strong>Apps</strong></span>
-          <b>↗</b>
-        </button>
-        <button type="button" onClick={openCinema}>
-          <span className="yv-rail-glyph cinema">▶</span>
-          <span><small>WATCH</small><strong>Cinema</strong></span>
-          <b>↗</b>
-        </button>
-        <button type="button" onClick={() => jump("music")}>
-          <span className="yv-rail-glyph music">♪</span>
-          <span><small>LISTEN</small><strong>Music</strong></span>
-          <b>↗</b>
-        </button>
-        <button type="button" onClick={() => click(".kgm-gallery-nav-link")}>
-          <span className="yv-rail-glyph gallery">✦</span>
-          <span><small>SHARE</small><strong>Gallery</strong></span>
-          <b>↗</b>
-        </button>
+      <nav className="yv-tx-spaces" aria-label="Explore KGM creative spaces">
+        <button type="button" onClick={() => jump("apps")}><i className="apps"/><span><small>BUILD</small><strong>Apps</strong></span><b>↗</b></button>
+        <button type="button" onClick={openCinema}><i className="cinema"/><span><small>WATCH</small><strong>Cinema</strong></span><b>↗</b></button>
+        <button type="button" onClick={() => jump("music")}><i className="music"/><span><small>LISTEN</small><strong>Music</strong></span><b>↗</b></button>
+        <button type="button" onClick={() => click(".kgm-gallery-nav-link")}><i className="gallery"/><span><small>SHARE</small><strong>Gallery</strong></span><b>↗</b></button>
       </nav>
 
-      <div className="yv-transmission-foot" aria-hidden="true">
-        <span><i /> COMMUNITY NETWORK ONLINE</span>
-        <strong>LOCAL CREATION → GLOBAL ACCESS</strong>
+      <div className="yv-tx-foot" aria-hidden="true">
+        <span><i/> COMMUNITY NETWORK ONLINE</span>
+        <strong>LOCAL CREATION → GLOBAL REACH</strong>
       </div>
     </aside>
   );
