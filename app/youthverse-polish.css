@@ -1,0 +1,28 @@
+/* Final Youthverse integration polish */
+@media(min-width:761px){
+  .kgm-youth-dark .kgm-gallery-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;align-items:start;grid-auto-flow:dense}
+  .kgm-youth-dark .kgm-upload-card.image .kgm-upload-media{aspect-ratio:4/5!important}
+  .kgm-youth-dark .kgm-upload-card.video .kgm-upload-media{aspect-ratio:9/12!important}
+  .kgm-youth-dark .kgm-upload-card.audio .kgm-upload-media{aspect-ratio:1/1!important}
+  .kgm-youth-dark .kgm-upload-card.apk .kgm-upload-media{aspect-ratio:1/1!important}
+  .kgm-youth-dark .kgm-upload-card:nth-child(5n+1){transform:rotate(-.35deg)}
+  .kgm-youth-dark .kgm-upload-card:nth-child(5n+3){transform:rotate(.35deg)}
+  .kgm-youth-dark .kgm-upload-card:hover{transform:translateY(-6px) rotate(0deg)!important}
+}
+
+.music-player:before{content:"";width:28px;height:22px;flex:0 0 28px;border-radius:8px;background:repeating-linear-gradient(90deg,var(--yv-lime) 0 3px,transparent 3px 6px);mask-image:linear-gradient(to top,transparent 0,#000 20%,#000 100%);animation:yvEqualizer 1.05s ease-in-out infinite alternate;opacity:.85}
+.music-player .player-track>span{box-shadow:0 0 22px rgba(139,92,255,.28)}
+
+.kgm-youth-dark .kgm-credits{background:#08080c!important;border-color:rgba(255,255,255,.08)!important}.kgm-youth-dark .kgm-cofounders span{border-color:rgba(255,255,255,.10)!important;background:rgba(255,255,255,.045)!important}.kgm-youth-dark .kgm-cofounders span:hover{border-color:rgba(216,255,62,.32)!important;color:var(--yv-lime)!important}
+
+body:has(.kgm-gallery-backdrop) .yv-mobile-dock,body:has(.village-chat-shell) .yv-mobile-dock,body:has(.kgm-upload-modal-backdrop) .yv-mobile-dock{display:none!important}
+body:has(.kgm-gallery-backdrop) .village-chat-launcher{display:none!important}
+
+@keyframes yvEqualizer{from{transform:scaleY(.45)}to{transform:scaleY(1)}}
+@media(prefers-reduced-motion:reduce){.music-player:before{animation:none}}
+
+@media(max-width:760px){
+  .kgm-gallery-grid{align-items:start}.kgm-upload-card.image .kgm-upload-media{aspect-ratio:4/5!important}.kgm-upload-card.video .kgm-upload-media{aspect-ratio:9/12!important}
+  .kgm-gallery-head{padding-top:max(18px,env(safe-area-inset-top))!important}
+  .yv-mobile-dock{bottom:max(9px,env(safe-area-inset-bottom))}
+}

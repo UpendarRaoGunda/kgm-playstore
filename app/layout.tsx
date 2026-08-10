@@ -6,6 +6,7 @@ import VillageChat from "./VillageChat";
 import KgmCredits from "./KgmCredits";
 import FreeKnowledgeMission from "./FreeKnowledgeMission";
 import PwaManager from "./PwaInstall";
+import YouthverseExperience from "./YouthverseExperience";
 import "./globals.css";
 import "./music.css";
 import "./music-library-manager.css";
@@ -18,15 +19,17 @@ import "./ux-polish.css";
 import "./telugu-typography.css";
 import "./free-knowledge-mission.css";
 import "./pwa-install.css";
+import "./youthverse.css";
+import "./youthverse-polish.css";
 
 export const metadata: Metadata = {
-  title: "KGM · Koratlagudem Community Hub",
-  description: "A free-for-everyone community hub for apps, music, gallery and Village Chat created and shared by Koratlagudem.",
+  title: "KGM · Koratlagudem Youthverse",
+  description: "Koratlagudem's digital playground for community apps, music, photos, videos, creators and Village Chat — free for everyone.",
   applicationName: "KGM APK Hub",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
-    title: "KGM APK Hub",
+    statusBarStyle: "black-translucent",
+    title: "KGM Youthverse",
   },
   other: {
     "codex-preview": "development",
@@ -45,8 +48,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  colorScheme: "light",
-  themeColor: "#7657ed",
+  colorScheme: "dark light",
+  themeColor: "#09090d",
 };
 
 export default function RootLayout({
@@ -60,6 +63,7 @@ export default function RootLayout({
         <a className="kgm-skip-link" href="#apps">Skip to community shelf</a>
         <FreeKnowledgeMission />
         {children}
+        <YouthverseExperience />
         <CommunityShelf />
         <KgmCredits />
         <MusicLibraryManager />
