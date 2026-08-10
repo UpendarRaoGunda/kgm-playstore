@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import MusicLibraryManager from "./MusicLibraryManager";
+import VillageChat from "./VillageChat";
 import "./globals.css";
 import "./music.css";
 import "./music-library-manager.css";
+import "./village-chat.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,11 +37,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en-IN">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         <MusicLibraryManager />
+        <VillageChat />
       </body>
     </html>
   );
