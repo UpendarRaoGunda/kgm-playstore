@@ -116,7 +116,9 @@ async function handle(req, res) {
     const matches=(x)=>(!cat||cat==="All"||x.category===cat)&&(!q||`${x.title} ${x.description} ${x.category} ${(x.topics||[]).join(" ")}`.toLowerCase().includes(q));
     const filtered=local.filter(matches);
     const pinned=PINNED_STEM_MOVIES.filter(matches).filter(x=>!(data.items||[]).some(item=>item.youtube_id===x.youtube_id||item.id===x.id));
-    return json(res,200,{...data,items:[...pinned,...filtered,...(data.items||[])],categories:[...new Set([...(data.categories||[]),...PINNED_STEM_MOVIES.map(x=>x.category),...local.map(x=>x.category)])]});
+    const featuredPinned=pinned.filter(x=>x.id==="youtube-fXnpFvsiCNE");
+    const collectionPinned=pinned.filter(x=>x.id!=="youtube-fXnpFvsiCNE");
+    return json(res,200,{...data,items:[...featuredPinned,...filtered,...(data.items||[]),...collectionPinned],categories:[...new Set([...(data.categories||[]),...PINNED_STEM_MOVIES.map(x=>x.category),...local.map(x=>x.category)])]});
   }
   if (url.pathname.startsWith("/api/kgm-")) return upstreamProxy(req,res);
   return appProxy(req,res);
