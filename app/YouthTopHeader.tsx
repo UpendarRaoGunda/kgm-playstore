@@ -18,25 +18,34 @@ export default function YouthTopHeader() {
   const [chatUnread, setChatUnread] = useState(0);
   const [lang, setLang] = useState<"en" | "te">("en");
 
+  async function syncAccount() {
+    const token = localStorage.getItem(TOKEN_KEY) || "";
+    if (!token) {
+      setAccount(null);
+      return;
+    }
+
+    const headers = { Authorization: `Bearer ${token}` };
+    try {
+      const [me, uploads] = await Promise.all([
+        fetch(`${API}/api/kgm-chat/auth/me`, { headers }).then((response) => response.ok ? response.json() : Promise.reject()),
+        fetch(`${API}/api/kgm-uploads/mine`, { headers }).then((response) => response.ok ? response.json() : Promise.reject()),
+      ]) as [Account, { items?: KgmAvatarUpload[] }];
+      const avatars = (uploads.items || []).filter((item) => isKgmAvatarUpload(item) && item.kind === "image");
+      setAccount({ ...me, avatar: avatarFromUploads(avatars) });
+    } catch {
+      setAccount(null);
+    }
+  }
+
   useEffect(() => {
     const saved = localStorage.getItem(THEME_KEY);
     const nextDark = saved !== "light";
     setDark(nextDark);
     document.documentElement.classList.toggle("kgm-youth-dark", nextDark);
     setLang(localStorage.getItem(LANG_KEY) === "te" ? "te" : "en");
-
-    const token = localStorage.getItem(TOKEN_KEY) || "";
-    if (!token) return;
-    const headers = { Authorization: `Bearer ${token}` };
-    Promise.all([
-      fetch(`${API}/api/kgm-chat/auth/me`, { headers }).then((response) => response.ok ? response.json() : Promise.reject()),
-      fetch(`${API}/api/kgm-uploads/mine`, { headers }).then((response) => response.ok ? response.json() : Promise.reject()),
-    ])
-      .then(([me, uploads]: [Account, { items?: KgmAvatarUpload[] }]) => {
-        const avatars = (uploads.items || []).filter((item) => isKgmAvatarUpload(item) && item.kind === "image");
-        setAccount({ ...me, avatar: avatarFromUploads(avatars) });
-      })
-      .catch(() => setAccount(null));
+    void syncAccount();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -52,14 +61,19 @@ export default function YouthTopHeader() {
       const next = (event as CustomEvent<{ lang?: "en" | "te" }>).detail?.lang;
       if (next) setLang(next);
     };
+    const handleAuthChanged = () => { void syncAccount(); };
+
     window.addEventListener("kgm-chat-unread", handleUnread as EventListener);
     window.addEventListener("kgm-profile-updated", handleProfile as EventListener);
     window.addEventListener("kgm-language-changed", handleLanguage as EventListener);
+    window.addEventListener("kgm-auth-changed", handleAuthChanged);
     return () => {
       window.removeEventListener("kgm-chat-unread", handleUnread as EventListener);
       window.removeEventListener("kgm-profile-updated", handleProfile as EventListener);
       window.removeEventListener("kgm-language-changed", handleLanguage as EventListener);
+      window.removeEventListener("kgm-auth-changed", handleAuthChanged);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function closeMenu() { setMenuOpen(false); }
@@ -68,6 +82,21 @@ export default function YouthTopHeader() {
   function openCinema() { closeMenu(); window.dispatchEvent(new Event("kgm-open-cinema")); }
   function openAccount() { closeMenu(); if (account) window.dispatchEvent(new Event("kgm-open-profile")); else clickExisting(".kgm-account-nav-link"); }
   function toggleLanguage() { closeMenu(); window.dispatchEvent(new Event("kgm-toggle-language")); }
+
+  function toggleMenu() {
+    const next = !menuOpen;
+    setMenuOpen(next);
+    if (next) void syncAccount();
+  }
+
+  function logOut() {
+    closeMenu();
+    localStorage.removeItem(TOKEN_KEY);
+    setAccount(null);
+    setChatUnread(0);
+    window.dispatchEvent(new Event("kgm-auth-changed"));
+    window.location.reload();
+  }
 
   function toggleTheme() {
     const next = !dark;
@@ -79,10 +108,10 @@ export default function YouthTopHeader() {
   const unreadLabel = chatUnread > 99 ? "99+" : chatUnread;
   const labels = lang === "te" ? {
     discover: "అన్వేషించండి", apps: "యాప్స్", music: "సంగీతం", cinema: "సినిమా", gallery: "గ్యాలరీ", chat: "చాట్",
-    install: "ఆండ్రాయిడ్ ఇన్‌స్టాల్", safety: "భద్రత", creators: "యువ సృష్టికర్తలు", language: "English", profile: account ? `${account.nickname} ప్రొఫైల్` : "సైన్ ఇన్ / నమోదు",
+    install: "ఆండ్రాయిడ్ ఇన్‌స్టాల్", safety: "భద్రత", creators: "యువ సృష్టికర్తలు", language: "English", signIn: "సైన్ ఇన్ / నమోదు", logout: "లాగ్ అవుట్",
   } : {
     discover: "Discover", apps: "Apps", music: "Music", cinema: "Cinema", gallery: "Gallery", chat: "Chat",
-    install: "Install Android", safety: "Safety", creators: "Young creators", language: "తెలుగు", profile: account ? `Edit ${account.nickname}` : "Sign in / Register",
+    install: "Install Android", safety: "Safety", creators: "Young creators", language: "తెలుగు", signIn: "Sign in / Register", logout: "Log out",
   };
 
   return (
@@ -111,7 +140,7 @@ export default function YouthTopHeader() {
             {account ? <KgmAvatar value={account.avatar} nickname={account.nickname} size="xs" className="kgm-header-avatar" /> : <span>☺</span>}
             <strong>{account?.nickname || (lang === "te" ? "సైన్ ఇన్" : "Sign in")}</strong>
           </button>
-          <button className={`kgm-youth-menu${menuOpen ? " open" : ""}`} type="button" onClick={() => setMenuOpen((value) => !value)} aria-label="Open KGM menu" aria-expanded={menuOpen}>
+          <button className={`kgm-youth-menu${menuOpen ? " open" : ""}`} type="button" onClick={toggleMenu} aria-label="Open KGM menu" aria-expanded={menuOpen}>
             <i /><i /><i />
           </button>
         </div>
@@ -128,7 +157,11 @@ export default function YouthTopHeader() {
         <button type="button" onClick={() => jump("#safety")}><span>✓</span>{labels.safety}</button>
         <button type="button" onClick={() => jump("#build")}><span>＋</span>{labels.creators}</button>
         <button type="button" onClick={toggleLanguage}><span>🌐</span>{labels.language}</button>
-        <button type="button" onClick={openAccount}><span>☺</span>{labels.profile}</button>
+        {account ? (
+          <button type="button" onClick={logOut}><span>↪</span>{labels.logout}</button>
+        ) : (
+          <button type="button" onClick={openAccount}><span>☺</span>{labels.signIn}</button>
+        )}
       </div>
     </header>
   );
