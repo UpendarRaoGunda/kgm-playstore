@@ -50,61 +50,73 @@ export default function YouthHeroShowcase() {
   }
 
   const showcase = (
-    <aside className="yv-hero-showcase" aria-label="Explore the KGM ecosystem">
-      <div className="yv-hero-aurora" aria-hidden="true" />
-      <div className="yv-hero-orbit yv-hero-orbit-a" aria-hidden="true" />
-      <div className="yv-hero-orbit yv-hero-orbit-b" aria-hidden="true" />
-      <div className="yv-hero-route" aria-hidden="true"><i /><i /><i /><i /></div>
-
-      <div className="yv-hero-core-card">
-        <div className="yv-hero-core-top">
-          <span className="yv-hero-network-live"><i /> LIVE FROM KORATLAGUDEM</span>
-          <span className="yv-hero-core-code">KGM°01</span>
-        </div>
-        <div className="yv-hero-core-brand">
-          <span className="yv-hero-core-k">K</span>
-          <div><small>KGM YOUTHVERSE</small><strong>Village ideas,<br/>everywhere.</strong></div>
-        </div>
-        <p>One home for things our community builds, watches, learns, records and shares.</p>
-        <div className="yv-hero-core-stats">
-          <span><strong>05</strong><small>creative spaces</small></span>
-          <span><strong>01</strong><small>village network</small></span>
-          <span><strong>∞</strong><small>curiosity</small></span>
-        </div>
-        <div className="yv-hero-core-foot"><span>17.12° N · 80.02° E</span><b>OPEN TO EVERYONE ↗</b></div>
+    <aside className="yv-hero-showcase yv-hero-showcase-v2" aria-label="Explore the KGM ecosystem">
+      <div className="yv-signal-ambient" aria-hidden="true">
+        <i className="ring ring-a" />
+        <i className="ring ring-b" />
+        <i className="ring ring-c" />
+        <span className="signal-dot dot-a" />
+        <span className="signal-dot dot-b" />
+        <span className="signal-dot dot-c" />
       </div>
 
-      <button type="button" className="yv-hero-mini yv-hero-mini-apps" onClick={() => jump("apps")} aria-label="Explore apps by young makers">
-        <span className="yv-hero-mini-icon">⌘</span>
-        <small>BUILT HERE</small>
-        <strong>Young makers</strong>
-        <em>Apps →</em>
-      </button>
+      <section className="yv-signal-board">
+        <header className="yv-signal-topbar">
+          <div className="yv-signal-live"><i /> LIVE FROM KORATLAGUDEM</div>
+          <div className="yv-signal-id">KGM / SIGNAL 01</div>
+        </header>
 
-      <button type="button" className="yv-hero-mini yv-hero-mini-cinema" onClick={openCinema} aria-label="Open KGM Science Cinema">
-        <span className="yv-hero-mini-icon">▶</span>
-        <small>SCIENCE CINEMA</small>
-        <strong>Watch curiosity</strong>
-        <em>STEM →</em>
-      </button>
+        <div className="yv-signal-intro">
+          <div className="yv-signal-logo">K</div>
+          <div>
+            <small>KGM YOUTHVERSE</small>
+            <h2>Local ideas.<br/><em>Global signal.</em></h2>
+          </div>
+        </div>
 
-      <button type="button" className="yv-hero-mini yv-hero-mini-music" onClick={() => jump("music")} aria-label="Play KGM music">
-        <span className="yv-hero-mini-wave" aria-hidden="true"><i/><i/><i/><i/><i/></span>
-        <small>FOLK RADIO</small>
-        <strong>Village sounds</strong>
-        <em>Play ♪</em>
-      </button>
+        <div className="yv-signal-route" aria-label="From Koratlagudem to everywhere">
+          <div className="yv-signal-place yv-signal-place-home">
+            <span>KGM</span>
+            <div><small>MADE HERE</small><strong>Koratlagudem</strong><em>17.12° N · 80.02° E</em></div>
+          </div>
+          <div className="yv-signal-beam" aria-hidden="true"><i/><i/><i/><b>→</b></div>
+          <div className="yv-signal-place yv-signal-place-world">
+            <span>∞</span>
+            <div><small>SHARED OUT</small><strong>Everywhere</strong><em>Open knowledge network</em></div>
+          </div>
+        </div>
 
-      <button type="button" className="yv-hero-mini yv-hero-mini-gallery" onClick={() => click(".kgm-gallery-nav-link")} aria-label="Open the KGM community gallery">
-        <span className="yv-hero-gallery-stack" aria-hidden="true"><i/><i/><i/></span>
-        <small>COMMUNITY DROP</small>
-        <strong>Made by us</strong>
-        <em>Gallery ↗</em>
-      </button>
+        <div className="yv-signal-caption">
+          <p>Apps, science, music and village creations — one place to build locally and share beyond the village.</p>
+          <span><b>05</b> creative spaces</span>
+        </div>
 
-      <div className="yv-hero-share-ribbon" aria-hidden="true">
-        <span>MADE HERE</span><i>→</i><span>SHARED EVERYWHERE</span>
-      </div>
+        <nav className="yv-signal-channels" aria-label="KGM creative spaces">
+          <button type="button" className="yv-signal-channel yv-channel-apps" onClick={() => jump("apps")}>
+            <span className="yv-channel-icon">⌘</span>
+            <div><small>BUILD</small><strong>Young makers</strong><em>Apps →</em></div>
+          </button>
+          <button type="button" className="yv-signal-channel yv-channel-cinema" onClick={openCinema}>
+            <span className="yv-channel-icon">▶</span>
+            <div><small>WATCH</small><strong>Science Cinema</strong><em>STEM →</em></div>
+          </button>
+          <button type="button" className="yv-signal-channel yv-channel-music" onClick={() => jump("music")}>
+            <span className="yv-channel-wave" aria-hidden="true"><i/><i/><i/><i/></span>
+            <div><small>LISTEN</small><strong>KGM Folk Radio</strong><em>Play ♪</em></div>
+          </button>
+          <button type="button" className="yv-signal-channel yv-channel-gallery" onClick={() => click(".kgm-gallery-nav-link")}>
+            <span className="yv-channel-stack" aria-hidden="true"><i/><i/><i/></span>
+            <div><small>SHARE</small><strong>Community Gallery</strong><em>Open ↗</em></div>
+          </button>
+        </nav>
+
+        <footer className="yv-signal-footer">
+          <span><i/> COMMUNITY NETWORK ONLINE</span>
+          <strong>OPEN TO EVERYONE ↗</strong>
+        </footer>
+      </section>
+
+      <div className="yv-signal-side-label" aria-hidden="true"><span>KGM</span><small>KORATLAGUDEM → WORLD</small></div>
     </aside>
   );
 
