@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { isKgmAvatarUpload } from "./KgmAvatar";
 
@@ -21,6 +21,12 @@ type UploadItem = {
   download_url: string;
   report_count: number;
   community_warning?: string | null;
+};
+
+type SelectedUpload = {
+  file: File;
+  kind: Exclude<GalleryKind, "all">;
+  previewUrl: string;
 };
 
 const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
@@ -48,6 +54,21 @@ function dateLabel(value: string) {
   return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" }).format(date);
 }
 
+function detectFileKind(file: File): Exclude<GalleryKind, "all"> {
+  const type = (file.type || "").toLowerCase();
+  const name = file.name.toLowerCase();
+  if (type.startsWith("image/")) return "image";
+  if (type.startsWith("video/") || /\.(mp4|mov|m4v|3gp|3gpp|webm|mpeg|mpg|avi)$/i.test(name)) return "video";
+  if (type.startsWith("audio/") || /\.(mp3|m4a|aac|wav|ogg|opus|webm)$/i.test(name)) return "audio";
+  return "apk";
+}
+
+function maxBytesFor(kind: Exclude<GalleryKind, "all">) {
+  if (kind === "image") return 10 * 1024 * 1024;
+  if (kind === "audio") return 25 * 1024 * 1024;
+  return 50 * 1024 * 1024;
+}
+
 async function json<T>(url: string, init?: RequestInit, token?: string): Promise<T> {
   const headers = new Headers(init?.headers || {});
   if (token) headers.set("Authorization", `Bearer ${token}`);
@@ -70,8 +91,12 @@ export default function CommunityGallery() {
   const [uploading, setUploading] = useState(false);
   const [account, setAccount] = useState<Account | null>(null);
   const [reported, setReported] = useState<Set<string>>(new Set());
+  const [selectedUpload, setSelectedUpload] = useState<SelectedUpload | null>(null);
 
   useEffect(() => setNavHost(document.querySelector(".nav-links")), []);
+  useEffect(() => () => {
+    if (selectedUpload?.previewUrl) URL.revokeObjectURL(selectedUpload.previewUrl);
+  }, [selectedUpload]);
 
   async function refreshAccount() {
     const token = localStorage.getItem(TOKEN_KEY) || "";
@@ -122,6 +147,36 @@ export default function CommunityGallery() {
     await load(next, query);
   }
 
+  function handleFileSelection(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    if (!file) {
+      setSelectedUpload(null);
+      return;
+    }
+    const nextKind = detectFileKind(file);
+    const limit = maxBytesFor(nextKind);
+    if (file.size > limit) {
+      setError(`${nextKind === "video" ? "Video" : "File"} is ${bytes(file.size)}. Maximum allowed size is ${bytes(limit)}.`);
+      event.currentTarget.value = "";
+      setSelectedUpload(null);
+      return;
+    }
+    setError("");
+    const previewUrl = nextKind === "apk" ? "" : URL.createObjectURL(file);
+    setSelectedUpload({ file, kind: nextKind, previewUrl });
+  }
+
+  function clearSelectedUpload() {
+    const input = document.querySelector<HTMLInputElement>("#kgm-community-upload-file");
+    if (input) input.value = "";
+    setSelectedUpload(null);
+  }
+
+  function closeUploadModal() {
+    clearSelectedUpload();
+    setUploadOpen(false);
+  }
+
   async function handleUpload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (uploading) return;
@@ -132,6 +187,11 @@ export default function CommunityGallery() {
     }
     const form = event.currentTarget;
     const data = new FormData(form);
+    const file = data.get("file");
+    if (!(file instanceof File) || !file.size) {
+      setError("Choose a photo, video, song or APK before publishing.");
+      return;
+    }
     if (data.get("rights_confirmed") !== "on") {
       setError("Confirm that you own the file or have permission to share it publicly.");
       return;
@@ -145,6 +205,7 @@ export default function CommunityGallery() {
       setKind("all");
       setQuery("");
       form.reset();
+      clearSelectedUpload();
       setUploadOpen(false);
       await refreshAccount();
     } catch (err) {
@@ -205,7 +266,7 @@ export default function CommunityGallery() {
             <p>Photos, village videos, songs and community APKs uploaded by KGM members.</p>
           </div>
           <div className="kgm-gallery-head-actions">
-            <button className="kgm-gallery-upload-button" type="button" onClick={async () => { await refreshAccount(); setUploadOpen(true); }}>＋ Upload</button>
+            <button className="kgm-gallery-upload-button" type="button" onClick={async () => { await refreshAccount(); setSelectedUpload(null); setUploadOpen(true); }}>＋ Upload</button>
             <button className="kgm-gallery-close" type="button" onClick={() => setOpen(false)} aria-label="Close gallery">×</button>
           </div>
         </header>
@@ -243,16 +304,40 @@ export default function CommunityGallery() {
         </div>
       </section>
 
-      {uploadOpen && <div className="kgm-upload-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setUploadOpen(false); }}>
+      {uploadOpen && <div className="kgm-upload-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) closeUploadModal(); }}>
         <form className="kgm-upload-modal" onSubmit={handleUpload}>
-          <header><div><span>SHARE WITH KORATLAGUDEM</span><h3>Upload to the public gallery</h3></div><button type="button" onClick={() => setUploadOpen(false)}>×</button></header>
+          <header><div><span>SHARE WITH KORATLAGUDEM</span><h3>Upload to the public gallery</h3></div><button type="button" onClick={closeUploadModal}>×</button></header>
           {account ? <div className="kgm-upload-account"><span>{account.nickname.slice(0, 1).toUpperCase()}</span><p>Posting as <strong>{account.nickname}</strong> · {account.role}</p></div> : <div className="kgm-upload-signin"><strong>Sign in first.</strong><p>Use the <b>Sign in</b> button in the KGM navigation, then come back to upload.</p></div>}
           <label>Title<input name="title" required maxLength={100} placeholder="What are you sharing?" disabled={!account} /></label>
           <label>Description<textarea name="description" maxLength={500} rows={3} placeholder="A short public description (optional)" disabled={!account} /></label>
-          <label className="kgm-upload-file">Choose photo, song, video or APK<input name="file" type="file" required disabled={!account} accept="image/jpeg,image/png,image/webp,image/gif,audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/ogg,audio/webm,video/mp4,video/webm,.apk,application/vnd.android.package-archive" /><small>Images ≤10 MB · music ≤25 MB · videos/APKs ≤50 MB</small></label>
+          <label className="kgm-upload-file">
+            Choose photo, song, video or APK
+            <input
+              id="kgm-community-upload-file"
+              name="file"
+              type="file"
+              required
+              disabled={!account}
+              accept="image/*,video/*,audio/*,.mp4,.mov,.m4v,.3gp,.3gpp,.webm,.mpeg,.mpg,.avi,.mp3,.m4a,.aac,.wav,.ogg,.opus,.apk,application/vnd.android.package-archive"
+              onChange={handleFileSelection}
+            />
+            <small>Phone camera videos are supported. Choose an existing recording from Photos/Gallery or Files. Images ≤10 MB · music ≤25 MB · videos/APKs ≤50 MB.</small>
+          </label>
+
+          {selectedUpload && <div className={`kgm-upload-selection ${selectedUpload.kind}`}>
+            <div className="kgm-upload-selection-head">
+              <div><span>SELECTED {selectedUpload.kind.toUpperCase()}</span><strong>{selectedUpload.file.name || "Camera recording"}</strong><small>{bytes(selectedUpload.file.size)}{selectedUpload.file.type ? ` · ${selectedUpload.file.type}` : " · phone media"}</small></div>
+              <button type="button" onClick={clearSelectedUpload}>Change</button>
+            </div>
+            {selectedUpload.kind === "video" && <video src={selectedUpload.previewUrl} controls playsInline preload="metadata" />}
+            {selectedUpload.kind === "image" && <img src={selectedUpload.previewUrl} alt="Selected upload preview" />}
+            {selectedUpload.kind === "audio" && <audio src={selectedUpload.previewUrl} controls preload="metadata" />}
+            {selectedUpload.kind === "apk" && <div className="kgm-upload-apk-preview"><span>APK</span><p>Ready to upload this Android package.</p></div>}
+          </div>}
+
           <label className="kgm-upload-rights"><input name="rights_confirmed" type="checkbox" required disabled={!account} /><span>I own this file or have permission to share it, and it is suitable for a public village gallery used by children and adults.</span></label>
           <div className="kgm-upload-policy"><strong>Public upload</strong><p>Your nickname, role and upload will be visible to everyone. Do not upload private photos, personal documents, contact details, harmful content, pirated media or APKs you do not trust.</p></div>
-          <button className="kgm-upload-submit" type="submit" disabled={!account || uploading}>{uploading ? "Uploading…" : "Publish for everyone →"}</button>
+          <button className="kgm-upload-submit" type="submit" disabled={!account || uploading || !selectedUpload}>{uploading ? "Uploading…" : selectedUpload ? `Publish ${selectedUpload.kind} for everyone →` : "Choose a file to continue"}</button>
         </form>
       </div>}
     </div>}
