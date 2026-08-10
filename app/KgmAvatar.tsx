@@ -32,7 +32,7 @@ export const KGM_AVATAR_PRESETS = [
   { id: "star-bloom", emoji: "🌟", name: "Star Bloom", vibe: "quietly iconic", tone: "sunset" },
 ] as const;
 
-const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
+const PROFILE_API = (process.env.NEXT_PUBLIC_KGM_PROFILE_API || "https://kgm-profile-api.onrender.com").replace(/\/$/, "");
 
 export function getAvatarPreset(id?: string | null) {
   return KGM_AVATAR_PRESETS.find((item) => item.id === id) || KGM_AVATAR_PRESETS[0];
@@ -40,7 +40,7 @@ export function getAvatarPreset(id?: string | null) {
 
 export function avatarImageUrl(value?: KgmAvatarValue | null) {
   if (value?.type !== "upload" || !value.url) return "";
-  return /^https?:\/\//i.test(value.url) ? value.url : `${API}${value.url.startsWith("/") ? value.url : `/${value.url}`}`;
+  return /^https?:\/\//i.test(value.url) ? value.url : `${PROFILE_API}${value.url.startsWith("/") ? value.url : `/${value.url}`}`;
 }
 
 export default function KgmAvatar({
