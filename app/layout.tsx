@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import MusicLibraryManager from "./MusicLibraryManager";
 import CommunityGallery from "./CommunityGallery";
 import VillageChat from "./VillageChat";
@@ -10,20 +9,12 @@ import "./music-library-manager.css";
 import "./community-gallery.css";
 import "./village-chat.css";
 import "./mobile-fixes.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import "./design-system.css";
+import "./ux-polish.css";
 
 export const metadata: Metadata = {
-  title: "Koratlagudem APK Hub",
-  description: "Safe Android apps imagined and built by the young creators of Koratlagudem, Telangana.",
+  title: "KGM · Koratlagudem Community Hub",
+  description: "Apps, music, gallery and Village Chat created and shared by the Koratlagudem community.",
   other: {
     "codex-preview": "development",
   },
@@ -41,7 +32,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en-IN">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body>
+        <a className="kgm-skip-link" href="#apps">Skip to community apps</a>
         {children}
         <KgmCredits />
         <MusicLibraryManager />
