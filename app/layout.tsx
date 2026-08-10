@@ -7,6 +7,7 @@ import KgmCredits from "./KgmCredits";
 import FreeKnowledgeMission from "./FreeKnowledgeMission";
 import PwaManager from "./PwaInstall";
 import YouthverseExperience from "./YouthverseExperience";
+import YouthTopHeader from "./YouthTopHeader";
 import "./globals.css";
 import "./music.css";
 import "./music-library-manager.css";
@@ -21,6 +22,7 @@ import "./free-knowledge-mission.css";
 import "./pwa-install.css";
 import "./youthverse.css";
 import "./youthverse-polish.css";
+import "./youth-top-header.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Youthverse",
@@ -62,6 +64,7 @@ export default function RootLayout({
       <body>
         <a className="kgm-skip-link" href="#apps">Skip to community shelf</a>
         <FreeKnowledgeMission />
+        <YouthTopHeader />
         {children}
         <YouthverseExperience />
         <CommunityShelf />
