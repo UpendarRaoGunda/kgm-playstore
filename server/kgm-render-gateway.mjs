@@ -10,7 +10,6 @@ const APP_PORT = Number(process.env.KGM_INTERNAL_PORT || 10001);
 const STORAGE = process.env.KGM_CINEMA_STORAGE_DIR || "/var/data/kgm-cinema";
 const MOVIES_DIR = join(STORAGE, "movies");
 const CATALOG = join(STORAGE, "catalog.json");
-const STATE = join(STORAGE, "state.json");
 const UPSTREAM = (process.env.KGM_UPSTREAM_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
 const MAX_UPLOAD = Number(process.env.KGM_CINEMA_MAX_UPLOAD_BYTES || 220 * 1024 * 1024);
 mkdirSync(MOVIES_DIR, { recursive: true });
@@ -18,7 +17,6 @@ mkdirSync(MOVIES_DIR, { recursive: true });
 const readJson = (path, fallback) => { try { return JSON.parse(readFileSync(path, "utf8")); } catch { return fallback; } };
 const saveJson = (path, value) => writeFileSync(path, JSON.stringify(value, null, 2));
 const catalog = () => readJson(CATALOG, []);
-const state = () => readJson(STATE, {});
 const json = (res, status, value) => { const body = Buffer.from(JSON.stringify(value)); res.writeHead(status, {"content-type":"application/json","content-length":body.length,"cache-control":"no-store"}); res.end(body); };
 
 async function userFrom(req) {
@@ -65,8 +63,8 @@ async function handle(req, res) {
     if (!(file instanceof File)) return json(res,400,{detail:"Choose an MP4 or WebM movie"});
     if (file.size>MAX_UPLOAD) return json(res,413,{detail:`Movie must be ${Math.round(MAX_UPLOAD/1024/1024)} MB or smaller`});
     if (!["video/mp4","video/webm"].includes(file.type)) return json(res,415,{detail:"Use MP4 or WebM for Render-hosted movies"});
-    if (String(form.get("stem_confirmed"))!=="true" && String(form.get("stem_confirmed"))!=="on") return json(res,400,{detail:"Confirm this is STEM content"});
-    const rights = ["true","on","1"].includes(String(form.get("rights_confirmed"))); if (!rights) return json(res,400,{detail:"Confirm you have rights to host this movie"});
+    if (!["true","on","1"].includes(String(form.get("stem_confirmed")))) return json(res,400,{detail:"Confirm this is STEM content"});
+    if (!["true","on","1"].includes(String(form.get("rights_confirmed")))) return json(res,400,{detail:"Confirm you have rights to host this movie"});
     const id=`render-${crypto.randomUUID()}`; const filename=`${id}-${safeName(file.name)}`; const path=join(MOVIES_DIR,filename); writeFileSync(path,Buffer.from(await file.arrayBuffer()));
     const item={id,source:"render",title:String(form.get("title")||file.name).slice(0,120),description:String(form.get("description")||"").slice(0,600),category:String(form.get("category")||"Science").slice(0,40),age_rating:String(form.get("age_rating")||"All ages").slice(0,30),duration_label:String(form.get("duration_label")||"").slice(0,40),language:String(form.get("language")||"English").slice(0,40),attribution:String(form.get("attribution")||"KGM Science Cinema").slice(0,120),topics:String(form.get("topics")||"").split(",").map(x=>x.trim()).filter(Boolean).slice(0,12),learn:String(form.get("learn")||"").split("\n").map(x=>x.trim()).filter(Boolean).slice(0,8),download_allowed:["true","on","1"].includes(String(form.get("download_allowed"))),filename,content_type:file.type,size:file.size,created_at:new Date().toISOString(),curator_id:who.id};
     const items=catalog(); items.unshift(item); saveJson(CATALOG,items); return json(res,201,localMovie(item));
@@ -86,9 +84,11 @@ async function handle(req, res) {
     const filtered=local.filter(x=>(!cat||cat==="All"||x.category===cat)&&(!q||`${x.title} ${x.description} ${x.category}`.toLowerCase().includes(q)));
     return json(res,200,{...data,items:[...filtered,...(data.items||[])],categories:[...new Set([...(data.categories||[]),...local.map(x=>x.category)])]});
   }
-  proxy(req,res);
+  if (url.pathname.startsWith("/api/kgm-")) return upstreamProxy(req,res);
+  return appProxy(req,res);
 }
-function proxy(req,res){const target=http.request({hostname:"127.0.0.1",port:APP_PORT,path:req.url,method:req.method,headers:{...req.headers,host:`127.0.0.1:${APP_PORT}`}},r=>{res.writeHead(r.statusCode||502,r.headers);r.pipe(res);});target.on("error",e=>json(res,502,{detail:`KGM app unavailable: ${e.message}`}));req.pipe(target);}
+function appProxy(req,res){const target=http.request({hostname:"127.0.0.1",port:APP_PORT,path:req.url,method:req.method,headers:{...req.headers,host:`127.0.0.1:${APP_PORT}`}},r=>{res.writeHead(r.statusCode||502,r.headers);r.pipe(res);});target.on("error",e=>json(res,502,{detail:`KGM app unavailable: ${e.message}`}));req.pipe(target);}
+function upstreamProxy(req,res){const u=new URL(UPSTREAM);const target=http.request({protocol:u.protocol,hostname:u.hostname,port:u.port||undefined,path:req.url,method:req.method,headers:{...req.headers,host:u.host}},r=>{res.writeHead(r.statusCode||502,r.headers);r.pipe(res);});target.on("error",e=>json(res,502,{detail:`KGM API unavailable: ${e.message}`}));req.pipe(target);}
 
 const child=spawn(process.execPath,["node_modules/vinext/dist/cli.js","start"],{stdio:"inherit",env:{...process.env,PORT:String(APP_PORT),WRANGLER_LOG_PATH:".wrangler/wrangler.log"}});
 child.on("exit",code=>{console.error("Vinext exited",code);process.exit(code||1);});
