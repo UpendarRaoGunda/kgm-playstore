@@ -104,6 +104,11 @@ function YouTubePlayer({ movie, initialSeconds, onProgress }: { movie: Movie; in
   const hostRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const timerRef = useRef<number | null>(null);
+  const onProgressRef = useRef(onProgress);
+  const initialSecondsRef = useRef(initialSeconds);
+
+  useEffect(() => { onProgressRef.current = onProgress; }, [onProgress]);
+  useEffect(() => { initialSecondsRef.current = initialSeconds; }, [initialSeconds]);
 
   useEffect(() => {
     if (!movie.youtube_id || !hostRef.current) return;
@@ -117,11 +122,12 @@ function YouTubePlayer({ movie, initialSeconds, onProgress }: { movie: Movie; in
         playerVars: { rel: 0, modestbranding: 1, playsinline: 1, origin: window.location.origin, list: movie.youtube_playlist_id || undefined },
         events: {
           onReady: (event: any) => {
-            if (initialSeconds > 3) event.target.seekTo(initialSeconds, true);
+            const resumeAt = initialSecondsRef.current;
+            if (resumeAt > 3) event.target.seekTo(resumeAt, true);
           },
           onStateChange: (event: any) => {
             const save = () => {
-              try { onProgress(event.target.getCurrentTime() || 0, event.target.getDuration() || 0); } catch { /* player disposed */ }
+              try { onProgressRef.current(event.target.getCurrentTime() || 0, event.target.getDuration() || 0); } catch { /* player disposed */ }
             };
             if (event.data === YT.PlayerState.PLAYING) {
               if (timerRef.current) window.clearInterval(timerRef.current);
@@ -141,7 +147,7 @@ function YouTubePlayer({ movie, initialSeconds, onProgress }: { movie: Movie; in
       timerRef.current = null;
       try { playerRef.current?.destroy?.(); } catch { /* noop */ }
     };
-  }, [movie.id, movie.youtube_id, movie.youtube_playlist_id, initialSeconds, onProgress]);
+  }, [movie.id, movie.youtube_id, movie.youtube_playlist_id]);
 
   return <div className="kgm-cinema-youtube" ref={hostRef} />;
 }
@@ -162,8 +168,6 @@ export default function ScienceCinema() {
   const [curateBusy, setCurateBusy] = useState(false);
   const renderSaveRef = useRef(0);
   const toastTimer = useRef<number | null>(null);
-
-  const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) || "" : "";
 
   function showToast(message: string) {
     setToast(message);
