@@ -42,13 +42,17 @@ export default function YouthTopHeader() {
 
   function jump(selector: string) {
     closeMenu();
-    const node = document.querySelector(selector);
-    node?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document.querySelector(selector)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function clickExisting(selector: string) {
     closeMenu();
     (document.querySelector(selector) as HTMLElement | null)?.click();
+  }
+
+  function openCinema() {
+    closeMenu();
+    window.dispatchEvent(new Event("kgm-open-cinema"));
   }
 
   function toggleTheme() {
@@ -73,6 +77,7 @@ export default function YouthTopHeader() {
           <button type="button" onClick={() => jump(".yv-trending")}>Discover</button>
           <button type="button" onClick={() => jump("#apps")}>Apps</button>
           <button type="button" onClick={() => jump("#music")}>Music</button>
+          <button className="kgm-youth-cinema-link" type="button" onClick={openCinema}>Cinema</button>
           <button type="button" onClick={() => clickExisting(".kgm-gallery-nav-link")}>Gallery</button>
           <button className={`kgm-youth-chat-link${chatUnread ? " has-unread" : ""}`} type="button" onClick={() => clickExisting(".kgm-chat-nav-link")}>Chat{chatUnread > 0 && <b className="kgm-youth-chat-badge">{unreadLabel}</b>}</button>
         </nav>
@@ -95,6 +100,7 @@ export default function YouthTopHeader() {
         <button type="button" onClick={() => jump(".yv-trending")}><span>◉</span>Discover</button>
         <button type="button" onClick={() => jump("#apps")}><span>▦</span>Apps</button>
         <button type="button" onClick={() => jump("#music")}><span>♪</span>Music</button>
+        <button type="button" onClick={openCinema}><span>🎬</span>Science Cinema</button>
         <button type="button" onClick={() => clickExisting(".kgm-gallery-nav-link")}><span>✦</span>Gallery</button>
         <button className="kgm-youth-mobile-chat" type="button" onClick={() => clickExisting(".kgm-chat-nav-link")}><span>◌</span>Village Chat{chatUnread > 0 && <b className="kgm-youth-chat-badge">{unreadLabel}</b>}</button>
         <button type="button" onClick={() => jump("#install")}><span>↓</span>Install Android</button>

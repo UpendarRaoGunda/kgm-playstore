@@ -88,6 +88,10 @@ export default function YouthverseExperience() {
     (document.querySelector(selector) as HTMLElement | null)?.click();
   }
 
+  function openCinema() {
+    window.dispatchEvent(new Event("kgm-open-cinema"));
+  }
+
   function openUpload() {
     clickExisting(".kgm-gallery-nav-link");
     window.setTimeout(() => clickExisting(".kgm-gallery-upload-button"), 80);
@@ -112,15 +116,16 @@ export default function YouthverseExperience() {
           <div className="yv-hero-copy">
             <span className="yv-kicker">KGM° · KORATLAGUDEM'S DIGITAL PLAYGROUND</span>
             <h1>MADE HERE.<br/><em>SHARED EVERYWHERE.</em></h1>
-            <p>{account ? `Yo ${account.nickname} 👋 what are we creating today?` : "Apps, music, photos, videos and ideas from a village that refuses to think small."}</p>
+            <p>{account ? `Yo ${account.nickname} 👋 what are we creating or learning today?` : "Apps, science cinema, music, photos, videos and ideas from a village that refuses to think small."}</p>
             <div className="yv-actions">
-              <button type="button" className="yv-primary" onClick={() => clickExisting(".kgm-gallery-nav-link")}>Explore KGM <span>↗</span></button>
+              <button type="button" className="yv-primary" onClick={openCinema}>Watch Science Cinema <span>▶</span></button>
               <button type="button" className="yv-secondary" onClick={openUpload}>＋ Drop something</button>
             </div>
             <div className="yv-pills">
               <button onClick={() => jump("apps")}>🎮 Apps</button>
+              <button onClick={openCinema}>🎬 Science Cinema</button>
               <button onClick={() => jump("music")}>🎧 Music</button>
-              <button onClick={() => clickExisting(".kgm-gallery-nav-link")}>🎬 Gallery</button>
+              <button onClick={() => clickExisting(".kgm-gallery-nav-link")}>✦ Gallery</button>
               <button onClick={() => clickExisting(".kgm-chat-nav-link")}>💬 Chat</button>
             </div>
           </div>
@@ -129,13 +134,13 @@ export default function YouthverseExperience() {
             <div className="yv-glow yv-glow-one" />
             <div className="yv-glow yv-glow-two" />
             <article className="yv-float yv-float-a"><span>APK</span><strong>Mana Ooru Quiz</strong><small>fresh from the lab</small></article>
-            <article className="yv-float yv-float-b"><span>♪</span><strong>KGM Radio</strong><small>village sounds on</small></article>
+            <article className="yv-float yv-float-b"><span>🎬</span><strong>Science Cinema</strong><small>STEM films · free</small></article>
             <article className="yv-float yv-float-c"><span>✦</span><strong>Gallery Drop</strong><small>photos · videos</small></article>
             <div className="yv-center-orb"><span>KGM</span><small>YOUTHVERSE</small></div>
           </div>
         </div>
 
-        <div className="yv-marquee" aria-hidden="true"><span>CREATE ✦ SHARE ✦ PLAY ✦ BUILD ✦ నేర్చుకో ✦ CREATE ✦ SHARE ✦ PLAY ✦ BUILD ✦</span></div>
+        <div className="yv-marquee" aria-hidden="true"><span>CREATE ✦ WATCH ✦ QUESTION ✦ SHARE ✦ PLAY ✦ BUILD ✦ నేర్చుకో ✦ CREATE ✦ WATCH ✦ QUESTION ✦</span></div>
 
         <section className="yv-section yv-trending">
           <div className="yv-section-head"><div><span>🔥 TRENDING IN KGM</span><h2>Fresh drops from the village.</h2></div><button onClick={() => clickExisting(".kgm-gallery-nav-link")}>See all ↗</button></div>
@@ -156,8 +161,9 @@ export default function YouthverseExperience() {
         </section>
 
         <section className="yv-section yv-for-you">
-          <div className="yv-section-head"><div><span>FOR YOU</span><h2>One feed. Every kind of creativity.</h2></div><span className="yv-safety">🛡 Community moderated</span></div>
+          <div className="yv-section-head"><div><span>FOR YOU</span><h2>One feed. Every kind of creativity and curiosity.</h2></div><span className="yv-safety">🛡 Community moderated</span></div>
           <div className="yv-feed-grid">
+            <button className="yv-feed-card yv-feed-cinema" onClick={openCinema}><span>STEM ONLY · FREE</span><strong>KGM Science Cinema</strong><p>Space, physics, biology, Earth, engineering and more—watch inside KGM.</p><b>START WATCHING ▶</b></button>
             <button className="yv-feed-card yv-feed-big" onClick={() => clickExisting(".kgm-gallery-nav-link")}><span>PHOTO + VIDEO</span><strong>Village moments deserve a feed, not a folder.</strong><p>See the newest visual drops from KGM creators.</p><b>OPEN GALLERY ↗</b></button>
             <button className="yv-feed-card yv-feed-music" onClick={() => jump("music")}><span>NOW PLAYING</span><strong>KGM Folk Radio</strong><p>Keep listening while you explore.</p><b>PLAY MUSIC ♪</b></button>
             <button className="yv-feed-card yv-feed-apps" onClick={() => jump("apps")}><span>BUILT HERE</span><strong>Apps by young makers</strong><p>From ideas to APKs.</p><b>EXPLORE APPS ↗</b></button>
@@ -176,7 +182,7 @@ export default function YouthverseExperience() {
 
       <nav className="yv-mobile-dock" aria-label="KGM mobile navigation">
         <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><span>⌂</span><small>Home</small></button>
-        <button onClick={() => clickExisting(".kgm-gallery-nav-link")}><span>◉</span><small>Explore</small></button>
+        <button onClick={openCinema}><span>🎬</span><small>Cinema</small></button>
         <button className="yv-upload-dock" onClick={openUpload}><span>＋</span><small>Upload</small></button>
         <button onClick={() => clickExisting(".kgm-chat-nav-link")}><span>◌</span><small>Chat</small></button>
         <button onClick={() => clickExisting(".kgm-account-nav-link")}><span>☺</span><small>Me</small></button>

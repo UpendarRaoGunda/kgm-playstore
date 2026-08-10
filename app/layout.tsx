@@ -3,6 +3,7 @@ import MusicLibraryManager from "./MusicLibraryManager";
 import CommunityGallery from "./CommunityGallery";
 import CommunityShelf from "./CommunityShelf";
 import VillageChat from "./VillageChat";
+import ScienceCinema from "./ScienceCinema";
 import KgmCredits from "./KgmCredits";
 import FreeKnowledgeMission from "./FreeKnowledgeMission";
 import PwaManager from "./PwaInstall";
@@ -25,10 +26,11 @@ import "./youthverse-polish.css";
 import "./youth-top-header.css";
 import "./overlay-layer-fixes.css";
 import "./chat-notifications.css";
+import "./science-cinema.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Youthverse",
-  description: "Koratlagudem's digital playground for community apps, music, photos, videos, creators and Village Chat — free for everyone.",
+  description: "Koratlagudem's digital playground for community apps, science cinema, music, photos, videos, creators and Village Chat — free for everyone.",
   applicationName: "KGM APK Hub",
   appleWebApp: {
     capable: true,
@@ -74,6 +76,7 @@ export default function RootLayout({
         <MusicLibraryManager />
         <CommunityGallery />
         <VillageChat />
+        <ScienceCinema />
         <PwaManager />
       </body>
     </html>
