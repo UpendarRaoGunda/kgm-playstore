@@ -103,7 +103,7 @@ export function PwaInstallButton({ onInteraction }: { onInteraction?: () => void
     >
       <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         {installed
-          ? <><path d="m5 12 4 4L19 6"/><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/></>
+          ? <><path d="m5 12 4 4L19 6"/><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2V5a2 2 0 0 1 2-2Z"/></>
           : <><path d="M12 3v11"/><path d="m8 10 4 4 4-4"/><path d="M5 18v2h14v-2"/></>}
       </svg>
       {installed ? "PC app installed" : "Install on PC"}
@@ -132,24 +132,36 @@ export default function PwaManager() {
       };
     }
 
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    const activateWorker = (worker: ServiceWorker | null) => {
+      if (!worker) return;
+      refreshForUpdate.current = true;
+      setUpdateWorker(worker);
+      worker.postMessage({ type: "SKIP_WAITING" });
+    };
+
     const watchRegistration = (registration: ServiceWorkerRegistration) => {
-      if (registration.waiting && navigator.serviceWorker.controller) setUpdateWorker(registration.waiting);
+      if (registration.waiting && navigator.serviceWorker.controller) activateWorker(registration.waiting);
       registration.addEventListener("updatefound", () => {
         const worker = registration.installing;
         if (!worker) return;
         worker.addEventListener("statechange", () => {
-          if (worker.state === "installed" && navigator.serviceWorker.controller) setUpdateWorker(worker);
+          if (worker.state === "installed" && navigator.serviceWorker.controller) activateWorker(worker);
         });
       });
+      void registration.update().catch(() => undefined);
     };
-    const register = () => navigator.serviceWorker.register("/service-worker.js", { scope: "/" })
+
+    const register = () => navigator.serviceWorker.register("/service-worker.js", { scope: "/", updateViaCache: "none" })
       .then(watchRegistration)
       .catch((error) => console.warn("KGM offline support could not start", error));
     if (document.readyState === "complete") register();
     else window.addEventListener("load", register, { once: true });
 
     const reloadAfterUpdate = () => {
-      if (refreshForUpdate.current) window.location.reload();
+      // Existing mobile/PWA/WebView clients should immediately load the new JS bundle.
+      // Avoid reloading only on the very first service-worker installation.
+      if (hadController || refreshForUpdate.current) window.location.reload();
     };
     navigator.serviceWorker.addEventListener("controllerchange", reloadAfterUpdate);
 
@@ -169,6 +181,6 @@ export default function PwaManager() {
 
   return <div className="kgm-pwa-status" aria-live="polite" aria-atomic="true">
     {!online && <div className="kgm-pwa-notice offline"><span aria-hidden="true">○</span><div><strong>You are offline</strong><small>KGM’s saved app shell remains available. Chat, gallery and downloads reconnect when the network returns.</small></div></div>}
-    {updateWorker && <div className="kgm-pwa-notice update"><span aria-hidden="true">↑</span><div><strong>A new KGM version is ready</strong><small>Refresh once to use the latest improvements.</small></div><button type="button" onClick={applyUpdate}>Update</button></div>}
+    {updateWorker && <div className="kgm-pwa-notice update"><span aria-hidden="true">↑</span><div><strong>Updating KGM…</strong><small>The latest mobile improvements are being activated automatically.</small></div><button type="button" onClick={applyUpdate}>Update now</button></div>}
   </div>;
 }
