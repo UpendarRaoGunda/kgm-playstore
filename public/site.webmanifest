@@ -1,10 +1,26 @@
 {
-  "name": "Koratlagudem APK Hub",
-  "short_name": "KGM APK Hub",
-  "description": "Android apps created by young makers in Koratlagudem.",
-  "start_url": "/",
+  "id": "/",
+  "name": "KGM · Koratlagudem Community Hub",
+  "short_name": "KGM Hub",
+  "description": "Apps, music, gallery and Village Chat created and shared by the Koratlagudem community.",
+  "lang": "en-IN",
+  "dir": "ltr",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "any",
   "background_color": "#fbf7ef",
   "theme_color": "#7657ed",
-  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+  "categories": ["education", "entertainment", "social"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Explore apps", "short_name": "Apps", "url": "/#apps", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Community music", "short_name": "Music", "url": "/#music", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Village Chat", "short_name": "Chat", "url": "/?open=village-chat", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
+  ]
 }

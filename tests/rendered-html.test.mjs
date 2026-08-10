@@ -38,7 +38,34 @@ test("renders the APK hub with preview metadata and core safety copy", async () 
   assert.match(html, /Mentor-reviewed releases/i);
   assert.match(html, /Published apps will include a verified APK/i);
   assert.match(html, /Download KGM Android APK/i);
+  assert.match(html, /Install on PC/i);
+  assert.match(html, /rel=["']manifest["'][^>]*site\.webmanifest|site\.webmanifest[^>]*rel=["']manifest["']/i);
   assert.match(html, /kgm-playstore\.onrender\.com\/downloads\/kgm-playstore-latest\.apk/i);
+});
+
+test("publishes a complete and privacy-conscious PWA shell", async () => {
+  const manifest = JSON.parse(
+    await readFile(new URL("../public/site.webmanifest", import.meta.url), "utf8"),
+  );
+  const serviceWorker = await readFile(
+    new URL("../public/service-worker.js", import.meta.url),
+    "utf8",
+  );
+  const offlinePage = await readFile(
+    new URL("../public/offline.html", import.meta.url),
+    "utf8",
+  );
+
+  assert.equal(manifest.id, "/");
+  assert.equal(manifest.display, "standalone");
+  assert.equal(manifest.scope, "/");
+  assert.ok(manifest.icons.some((icon) => icon.sizes === "192x192" && icon.type === "image/png"));
+  assert.ok(manifest.icons.some((icon) => icon.sizes === "512x512" && icon.purpose === "maskable"));
+  assert.match(serviceWorker, /offline\.html/);
+  assert.match(serviceWorker, /pathname\.startsWith\("\/api\/"\)/);
+  assert.match(serviceWorker, /pathname\.startsWith\("\/downloads\/"\)/);
+  assert.match(serviceWorker, /SKIP_WAITING/);
+  assert.match(offlinePage, /You are offline/i);
 });
 
 test("publishes a checksum-matched native Android APK", async () => {
