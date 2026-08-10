@@ -41,6 +41,15 @@ function driveId(input="") {
 }
 function safeName(name="movie.mp4") { return basename(name).replace(/[^a-zA-Z0-9._-]+/g,"-").slice(-120) || "movie.mp4"; }
 function localMovie(item) { return { ...item, stream_url: `/api/kgm-media/render/${item.id}/stream`, download_url: item.download_allowed ? `/api/kgm-media/render/${item.id}/download` : null }; }
+function proxyHeaders(req, host) {
+  const headers = { ...req.headers };
+  for (const key of ["connection","keep-alive","proxy-authenticate","proxy-authorization","te","trailer","transfer-encoding","upgrade"]) delete headers[key];
+  headers.host = host;
+  headers["x-forwarded-host"] = req.headers.host || host;
+  headers["x-forwarded-proto"] = "https";
+  headers["x-forwarded-port"] = "443";
+  return headers;
+}
 
 async function handle(req, res) {
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
@@ -86,10 +95,18 @@ async function handle(req, res) {
   if (url.pathname.startsWith("/api/kgm-")) return upstreamProxy(req,res);
   return appProxy(req,res);
 }
-function appProxy(req,res){const target=http.request({hostname:"127.0.0.1",port:APP_PORT,path:req.url,method:req.method,headers:{...req.headers,host:req.headers.host || "kgm-playstore.onrender.com"}},r=>{res.writeHead(r.statusCode||502,r.headers);r.pipe(res);});target.on("error",e=>json(res,502,{detail:`KGM app unavailable: ${e.message}`}));req.pipe(target);}
-function upstreamProxy(req,res){const u=new URL(UPSTREAM);const client=u.protocol==="https:"?https:http;const target=client.request({hostname:u.hostname,port:u.port||undefined,path:req.url,method:req.method,headers:{...req.headers,host:u.host}},r=>{res.writeHead(r.statusCode||502,r.headers);r.pipe(res);});target.on("error",e=>json(res,502,{detail:`KGM API unavailable: ${e.message}`}));req.pipe(target);}
+function appProxy(req,res){
+  const host=req.headers.host || "kgm-playstore.onrender.com";
+  const target=http.request({hostname:"127.0.0.1",port:APP_PORT,path:req.url,method:req.method,headers:proxyHeaders(req,host)},r=>{
+    console.log(`[vinext-proxy] ${req.method} ${req.url} -> ${r.statusCode}`);
+    res.writeHead(r.statusCode||502,r.headers);r.pipe(res);
+  });
+  target.on("error",e=>{console.error("[vinext-proxy:error]",e.message);json(res,502,{detail:`KGM app unavailable: ${e.message}`});});
+  req.pipe(target);
+}
+function upstreamProxy(req,res){const u=new URL(UPSTREAM);const client=u.protocol==="https:"?https:http;const target=client.request({hostname:u.hostname,port:u.port||undefined,path:req.url,method:req.method,headers:proxyHeaders(req,u.host)},r=>{res.writeHead(r.statusCode||502,r.headers);r.pipe(res);});target.on("error",e=>json(res,502,{detail:`KGM API unavailable: ${e.message}`}));req.pipe(target);}
 
 const vinextBin=join(process.cwd(),"node_modules",".bin","vinext");
-const child=spawn(vinextBin,["start"],{stdio:"inherit",env:{...process.env,PORT:String(APP_PORT),WRANGLER_LOG_PATH:".wrangler/wrangler.log"}});
+const child=spawn(vinextBin,["start"],{stdio:"inherit",env:{...process.env,PORT:String(APP_PORT),HOST:"127.0.0.1",WRANGLER_LOG_PATH:".wrangler/wrangler.log"}});
 child.on("exit",code=>{console.error("Vinext exited",code);process.exit(code||1);});
 http.createServer((req,res)=>handle(req,res).catch(err=>{console.error(err);json(res,500,{detail:"KGM media gateway error"});})).listen(PORT,"0.0.0.0",()=>console.log(`KGM gateway :${PORT}; Vinext :${APP_PORT}; storage ${STORAGE}`));
