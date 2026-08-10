@@ -4,6 +4,7 @@ import CommunityGallery from "./CommunityGallery";
 import CommunityShelf from "./CommunityShelf";
 import VillageChat from "./VillageChat";
 import ScienceCinema from "./ScienceCinema";
+import ProfileEditor from "./ProfileEditor";
 import KgmCredits from "./KgmCredits";
 import FreeKnowledgeMission from "./FreeKnowledgeMission";
 import PwaManager from "./PwaInstall";
@@ -27,6 +28,7 @@ import "./youth-top-header.css";
 import "./overlay-layer-fixes.css";
 import "./chat-notifications.css";
 import "./science-cinema.css";
+import "./profile-avatar.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Youthverse",
@@ -77,6 +79,7 @@ export default function RootLayout({
         <CommunityGallery />
         <VillageChat />
         <ScienceCinema />
+        <ProfileEditor />
         <PwaManager />
       </body>
     </html>
