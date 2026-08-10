@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { isKgmAvatarUpload } from "./KgmAvatar";
 
 type GalleryKind = "all" | "image" | "audio" | "video" | "apk";
 type Account = { id: string; email: string; nickname: string; role: "Child" | "Teen" | "Adult" };
@@ -96,7 +97,7 @@ export default function CommunityGallery() {
       const params = new URLSearchParams({ kind: nextKind, limit: "100" });
       if (nextQuery.trim()) params.set("q", nextQuery.trim());
       const data = await json<{ items: UploadItem[] }>(`${API}/api/kgm-uploads?${params}`);
-      setItems(data.items);
+      setItems((data.items || []).filter((item) => !isKgmAvatarUpload(item)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load village uploads");
     } finally {
