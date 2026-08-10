@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import KgmAvatar, { type KgmProfile } from "./KgmAvatar";
 import { PwaInstallButton } from "./PwaInstall";
 
 type Account = { id: string; nickname: string; role: string };
 
-const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
+const CHAT_API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
+const PROFILE_API = (process.env.NEXT_PUBLIC_KGM_PROFILE_API || "https://kgm-profile-api.onrender.com").replace(/\/$/, "");
 const TOKEN_KEY = "kgm-village-chat-token-v2";
 const THEME_KEY = "kgm-youth-theme-v1";
 
 export default function YouthTopHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [account, setAccount] = useState<Account | null>(null);
+  const [account, setAccount] = useState<KgmProfile | null>(null);
   const [dark, setDark] = useState(true);
   const [chatUnread, setChatUnread] = useState(0);
 
@@ -23,10 +25,13 @@ export default function YouthTopHeader() {
 
     const token = localStorage.getItem(TOKEN_KEY) || "";
     if (!token) return;
-    fetch(`${API}/api/kgm-chat/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${PROFILE_API}/api/kgm-profile/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then((response) => response.ok ? response.json() : Promise.reject())
-      .then((me: Account) => setAccount(me))
-      .catch(() => setAccount(null));
+      .then((me: KgmProfile) => setAccount(me))
+      .catch(() => fetch(`${CHAT_API}/api/kgm-chat/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
+        .then((response) => response.ok ? response.json() : Promise.reject())
+        .then((me: Account) => setAccount({ ...me, email: "", avatar: { type: "preset", preset: "orbit-pop" } } as KgmProfile))
+        .catch(() => setAccount(null)));
   }, []);
 
   useEffect(() => {
@@ -34,8 +39,16 @@ export default function YouthTopHeader() {
       const count = (event as CustomEvent<{ count?: number }>).detail?.count || 0;
       setChatUnread(Math.max(0, count));
     };
+    const handleProfile = (event: Event) => {
+      const next = (event as CustomEvent<KgmProfile>).detail;
+      if (next?.id) setAccount(next);
+    };
     window.addEventListener("kgm-chat-unread", handleUnread as EventListener);
-    return () => window.removeEventListener("kgm-chat-unread", handleUnread as EventListener);
+    window.addEventListener("kgm-profile-updated", handleProfile as EventListener);
+    return () => {
+      window.removeEventListener("kgm-chat-unread", handleUnread as EventListener);
+      window.removeEventListener("kgm-profile-updated", handleProfile as EventListener);
+    };
   }, []);
 
   function closeMenu() { setMenuOpen(false); }
@@ -53,6 +66,12 @@ export default function YouthTopHeader() {
   function openCinema() {
     closeMenu();
     window.dispatchEvent(new Event("kgm-open-cinema"));
+  }
+
+  function openAccount() {
+    closeMenu();
+    if (account) window.dispatchEvent(new Event("kgm-open-profile"));
+    else clickExisting(".kgm-account-nav-link");
   }
 
   function toggleTheme() {
@@ -86,8 +105,8 @@ export default function YouthTopHeader() {
           <div className="kgm-youth-install"><PwaInstallButton /></div>
           <button className="kgm-youth-language" type="button" onClick={() => clickExisting(".language-button")}>తెలుగు</button>
           <button className="kgm-youth-theme-button" type="button" onClick={toggleTheme} aria-label="Toggle light or dark appearance">{dark ? "☀" : "☾"}</button>
-          <button className="kgm-youth-account" type="button" onClick={() => clickExisting(".kgm-account-nav-link")} title={account?.nickname || "Sign in or create account"}>
-            <span>{account ? account.nickname.slice(0, 1).toUpperCase() : "☺"}</span>
+          <button className="kgm-youth-account" type="button" onClick={openAccount} title={account ? `Edit ${account.nickname}'s profile` : "Sign in or create account"}>
+            {account ? <KgmAvatar value={account.avatar} nickname={account.nickname} size="xs" className="kgm-header-avatar" /> : <span>☺</span>}
             <strong>{account?.nickname || "Sign in"}</strong>
           </button>
           <button className={`kgm-youth-menu${menuOpen ? " open" : ""}`} type="button" onClick={() => setMenuOpen((value) => !value)} aria-label="Open KGM menu" aria-expanded={menuOpen}>
@@ -106,7 +125,7 @@ export default function YouthTopHeader() {
         <button type="button" onClick={() => jump("#install")}><span>↓</span>Install Android</button>
         <button type="button" onClick={() => jump("#safety")}><span>✓</span>Safety</button>
         <button type="button" onClick={() => jump("#build")}><span>＋</span>Young creators</button>
-        <button type="button" onClick={() => clickExisting(".kgm-account-nav-link")}><span>☺</span>{account?.nickname || "Sign in / Register"}</button>
+        <button type="button" onClick={openAccount}><span>☺</span>{account ? `Edit ${account.nickname}` : "Sign in / Register"}</button>
       </div>
     </header>
   );
