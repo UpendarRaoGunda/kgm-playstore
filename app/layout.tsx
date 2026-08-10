@@ -6,6 +6,7 @@ import VillageChat from "./VillageChat";
 import ScienceCinema from "./ScienceCinema";
 import ScienceCinemaDrive from "./ScienceCinemaDrive";
 import CinemaLegalMovies from "./CinemaLegalMovies";
+import CinemaPosterSourceEnhancer from "./CinemaPosterSourceEnhancer";
 import ProfileEditor from "./ProfileEditor";
 import KgmCredits from "./KgmCredits";
 import FreeKnowledgeMission from "./FreeKnowledgeMission";
@@ -88,6 +89,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ScienceCinema />
         <ScienceCinemaDrive />
         <CinemaLegalMovies />
+        <CinemaPosterSourceEnhancer />
         <CinemaCategoryScroller />
         <ProfileEditor />
         <PwaManager />
