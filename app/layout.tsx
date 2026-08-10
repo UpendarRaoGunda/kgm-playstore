@@ -10,6 +10,7 @@ import "./community-gallery.css";
 import "./village-chat.css";
 import "./mobile-fixes.css";
 import "./design-system.css";
+import "./ux-polish.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Community Hub",
