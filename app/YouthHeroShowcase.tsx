@@ -50,73 +50,76 @@ export default function YouthHeroShowcase() {
   }
 
   const showcase = (
-    <aside className="yv-hero-showcase yv-hero-showcase-v2" aria-label="Explore the KGM ecosystem">
-      <div className="yv-signal-ambient" aria-hidden="true">
-        <i className="ring ring-a" />
-        <i className="ring ring-b" />
-        <i className="ring ring-c" />
-        <span className="signal-dot dot-a" />
-        <span className="signal-dot dot-b" />
-        <span className="signal-dot dot-c" />
+    <aside className="yv-transmission" aria-label="Explore the KGM Youthverse">
+      <div className="yv-transmission-grid" aria-hidden="true" />
+      <div className="yv-transmission-glow" aria-hidden="true" />
+
+      <div className="yv-transmission-meta">
+        <span className="yv-transmission-live"><i /> LIVE FROM KORATLAGUDEM</span>
+        <span>KGM° / YOUTHVERSE</span>
       </div>
 
-      <section className="yv-signal-board">
-        <header className="yv-signal-topbar">
-          <div className="yv-signal-live"><i /> LIVE FROM KORATLAGUDEM</div>
-          <div className="yv-signal-id">KGM / SIGNAL 01</div>
-        </header>
-
-        <div className="yv-signal-intro">
-          <div className="yv-signal-logo">K</div>
-          <div>
-            <small>KGM YOUTHVERSE</small>
-            <h2>Local ideas.<br/><em>Global signal.</em></h2>
-          </div>
+      <div className="yv-transmission-stage">
+        <div className="yv-transmission-origin">
+          <small>ORIGIN</small>
+          <strong>KORATLAGUDEM</strong>
+          <span>TELANGANA · INDIA</span>
         </div>
 
-        <div className="yv-signal-route" aria-label="From Koratlagudem to everywhere">
-          <div className="yv-signal-place yv-signal-place-home">
-            <span>KGM</span>
-            <div><small>MADE HERE</small><strong>Koratlagudem</strong><em>17.12° N · 80.02° E</em></div>
+        <div className="yv-k-monolith" aria-label="KGM Youthverse">
+          <div className="yv-k-back" aria-hidden="true" />
+          <div className="yv-k-face">
+            <span className="yv-k-eyebrow">KGM°</span>
+            <strong>K</strong>
+            <div className="yv-k-caption"><small>MADE HERE</small><b>SHARED<br/>EVERYWHERE</b></div>
           </div>
-          <div className="yv-signal-beam" aria-hidden="true"><i/><i/><i/><b>→</b></div>
-          <div className="yv-signal-place yv-signal-place-world">
-            <span>∞</span>
-            <div><small>SHARED OUT</small><strong>Everywhere</strong><em>Open knowledge network</em></div>
-          </div>
+          <div className="yv-k-edge" aria-hidden="true" />
+          <div className="yv-k-shine" aria-hidden="true" />
         </div>
 
-        <div className="yv-signal-caption">
-          <p>Apps, science, music and village creations — one place to build locally and share beyond the village.</p>
-          <span><b>05</b> creative spaces</span>
+        <div className="yv-transmission-world">
+          <span className="yv-world-mark">∞</span>
+          <div><small>OPEN NETWORK</small><strong>EVERYWHERE</strong><em>Curiosity has no postcode.</em></div>
         </div>
 
-        <nav className="yv-signal-channels" aria-label="KGM creative spaces">
-          <button type="button" className="yv-signal-channel yv-channel-apps" onClick={() => jump("apps")}>
-            <span className="yv-channel-icon">⌘</span>
-            <div><small>BUILD</small><strong>Young makers</strong><em>Apps →</em></div>
-          </button>
-          <button type="button" className="yv-signal-channel yv-channel-cinema" onClick={openCinema}>
-            <span className="yv-channel-icon">▶</span>
-            <div><small>WATCH</small><strong>Science Cinema</strong><em>STEM →</em></div>
-          </button>
-          <button type="button" className="yv-signal-channel yv-channel-music" onClick={() => jump("music")}>
-            <span className="yv-channel-wave" aria-hidden="true"><i/><i/><i/><i/></span>
-            <div><small>LISTEN</small><strong>KGM Folk Radio</strong><em>Play ♪</em></div>
-          </button>
-          <button type="button" className="yv-signal-channel yv-channel-gallery" onClick={() => click(".kgm-gallery-nav-link")}>
-            <span className="yv-channel-stack" aria-hidden="true"><i/><i/><i/></span>
-            <div><small>SHARE</small><strong>Community Gallery</strong><em>Open ↗</em></div>
-          </button>
-        </nav>
+        <div className="yv-transmission-beam" aria-hidden="true">
+          <span className="yv-beam-line" />
+          <i className="yv-beam-dot d1" /><i className="yv-beam-dot d2" /><i className="yv-beam-dot d3" />
+          <b>→</b>
+        </div>
 
-        <footer className="yv-signal-footer">
-          <span><i/> COMMUNITY NETWORK ONLINE</span>
-          <strong>OPEN TO EVERYONE ↗</strong>
-        </footer>
-      </section>
+        <div className="yv-transmission-stamp" aria-hidden="true">
+          <span>17.12° N</span><i /> <span>80.02° E</span>
+        </div>
+      </div>
 
-      <div className="yv-signal-side-label" aria-hidden="true"><span>KGM</span><small>KORATLAGUDEM → WORLD</small></div>
+      <nav className="yv-transmission-rail" aria-label="KGM creative spaces">
+        <button type="button" onClick={() => jump("apps")}>
+          <span className="yv-rail-glyph apps">⌘</span>
+          <span><small>BUILD</small><strong>Apps</strong></span>
+          <b>↗</b>
+        </button>
+        <button type="button" onClick={openCinema}>
+          <span className="yv-rail-glyph cinema">▶</span>
+          <span><small>WATCH</small><strong>Cinema</strong></span>
+          <b>↗</b>
+        </button>
+        <button type="button" onClick={() => jump("music")}>
+          <span className="yv-rail-glyph music">♪</span>
+          <span><small>LISTEN</small><strong>Music</strong></span>
+          <b>↗</b>
+        </button>
+        <button type="button" onClick={() => click(".kgm-gallery-nav-link")}>
+          <span className="yv-rail-glyph gallery">✦</span>
+          <span><small>SHARE</small><strong>Gallery</strong></span>
+          <b>↗</b>
+        </button>
+      </nav>
+
+      <div className="yv-transmission-foot" aria-hidden="true">
+        <span><i /> COMMUNITY NETWORK ONLINE</span>
+        <strong>LOCAL CREATION → GLOBAL ACCESS</strong>
+      </div>
     </aside>
   );
 
