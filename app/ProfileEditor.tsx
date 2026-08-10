@@ -111,9 +111,9 @@ export default function ProfileEditor() {
     setLoading(true);
     setError("");
     try {
-      const [account, uploadsResult, cinemaMe, movieResult] = await Promise.all([
-        apiRequest<Account>("/api/kgm-chat/auth/me", undefined, token),
-        apiRequest<{ items: UploadItem[] }>("/api/kgm-uploads/mine", undefined, token),
+      const account = await apiRequest<Account>("/api/kgm-chat/auth/me", undefined, token);
+      const [uploadsResult, cinemaMe, movieResult] = await Promise.all([
+        apiRequest<{ items: UploadItem[] }>("/api/kgm-uploads/mine", undefined, token).catch(() => ({ items: [] })),
         apiRequest<CinemaMe>("/api/kgm-cinema/me", undefined, token).catch(() => ({ liked_ids: [], playlists: [] } as CinemaMe)),
         apiRequest<{ items: CinemaMovie[] }>("/api/kgm-cinema/movies?limit=120").catch(() => ({ items: [] })),
       ]);
@@ -263,6 +263,16 @@ export default function ProfileEditor() {
     }
   }
 
+  function logOut() {
+    localStorage.removeItem(TOKEN_KEY);
+    setOpen(false);
+    setProfile(null);
+    setAvatarUploads([]);
+    setCinema({ liked: [], saved: [] });
+    window.dispatchEvent(new Event("kgm-auth-changed"));
+    window.location.reload();
+  }
+
   if (!open) return null;
 
   const previewAvatar = selectedPreset
@@ -331,7 +341,7 @@ export default function ProfileEditor() {
 
             {error && <p className="kgm-profile-error">{error}</p>}
             {saved && <p className="kgm-profile-saved">✓ Profile glow-up saved.</p>}
-            <div className="kgm-profile-actions"><button type="button" onClick={() => setOpen(false)}>Cancel</button><button className="primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save profile →"}</button></div>
+            <div className="kgm-profile-actions"><button className="danger" type="button" onClick={logOut}>↪ Log out</button><button type="button" onClick={() => setOpen(false)}>Cancel</button><button className="primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save profile →"}</button></div>
           </div>
         </form>}
       </section>
