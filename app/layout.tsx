@@ -3,11 +3,13 @@ import { Geist, Geist_Mono } from "next/font/google";
 import MusicLibraryManager from "./MusicLibraryManager";
 import CommunityGallery from "./CommunityGallery";
 import VillageChat from "./VillageChat";
+import KgmCredits from "./KgmCredits";
 import "./globals.css";
 import "./music.css";
 import "./music-library-manager.css";
 import "./community-gallery.css";
 import "./village-chat.css";
+import "./mobile-fixes.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,6 +43,7 @@ export default function RootLayout({
     <html lang="en-IN">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
+        <KgmCredits />
         <MusicLibraryManager />
         <CommunityGallery />
         <VillageChat />
