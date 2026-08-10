@@ -10,11 +10,45 @@ type AuthResponse = { token: string; user: ChatAccount; verification_required: b
 type ChatMessage = { id: string; nickname: string; role: ChatRole; text: string; created_at: string; mine: boolean };
 type NotificationState = NotificationPermission | "unsupported";
 type BadgeNavigator = Navigator & { setAppBadge?: (contents?: number) => Promise<void>; clearAppBadge?: () => Promise<void> };
+type AuthStateDetail = { authenticated: boolean; user?: ChatAccount; token?: string; validationPending?: boolean };
+
+class KgmApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "KgmApiError";
+    this.status = status;
+  }
+}
 
 const CHAT_API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
 const TOKEN_KEY = "kgm-village-chat-token-v2";
+const ACCOUNT_CACHE_KEY = "kgm-account-cache-v1";
 const NOTIFY_KEY = "kgm-village-chat-notifications-v1";
 const SEEN_KEY_PREFIX = "kgm-village-chat-seen-v1:";
+
+function emitAuthState(detail: AuthStateDetail) {
+  window.dispatchEvent(new CustomEvent<AuthStateDetail>("kgm-auth-state", { detail }));
+}
+
+function cacheAccount(account: ChatAccount | null) {
+  if (!account) {
+    localStorage.removeItem(ACCOUNT_CACHE_KEY);
+    return;
+  }
+  localStorage.setItem(ACCOUNT_CACHE_KEY, JSON.stringify(account));
+}
+
+function readCachedAccount(): ChatAccount | null {
+  try {
+    const raw = localStorage.getItem(ACCOUNT_CACHE_KEY);
+    if (!raw) return null;
+    const account = JSON.parse(raw) as ChatAccount;
+    return account?.id && account?.nickname ? account : null;
+  } catch {
+    return null;
+  }
+}
 
 function timeLabel(value: string) {
   const date = new Date(value);
@@ -28,7 +62,12 @@ async function jsonRequest<T>(url: string, init?: RequestInit, token?: string): 
   if (token) headers.set("Authorization", `Bearer ${token}`);
   const response = await fetch(url, { ...init, headers });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(typeof data?.detail === "string" ? data.detail : "Village Chat is temporarily unavailable");
+  if (!response.ok) {
+    throw new KgmApiError(
+      typeof data?.detail === "string" ? data.detail : "Village Chat is temporarily unavailable",
+      response.status,
+    );
+  }
   return data as T;
 }
 
@@ -60,15 +99,41 @@ export default function VillageChat() {
     setNavHost(document.querySelector(".nav-links"));
     const stored = localStorage.getItem(TOKEN_KEY);
     if (!stored) {
+      cacheAccount(null);
+      emitAuthState({ authenticated: false });
       setSessionChecking(false);
       return;
     }
+
     setToken(stored);
+    const cached = readCachedAccount();
+    if (cached) {
+      setAccount(cached);
+      emitAuthState({ authenticated: true, user: cached, token: stored, validationPending: true });
+    } else {
+      emitAuthState({ authenticated: true, token: stored, validationPending: true });
+    }
+
     jsonRequest<ChatAccount>(`${CHAT_API}/api/kgm-chat/auth/me`, undefined, stored)
-      .then((user) => setAccount(user))
-      .catch(() => {
-        localStorage.removeItem(TOKEN_KEY);
-        setToken("");
+      .then((user) => {
+        setAccount(user);
+        cacheAccount(user);
+        emitAuthState({ authenticated: true, user, token: stored });
+      })
+      .catch((err) => {
+        // A temporary mobile/WebView/Render network failure must never erase a valid
+        // login. Only an explicit authentication rejection invalidates the token.
+        if (err instanceof KgmApiError && err.status === 401) {
+          localStorage.removeItem(TOKEN_KEY);
+          cacheAccount(null);
+          setToken("");
+          setAccount(null);
+          emitAuthState({ authenticated: false });
+          window.dispatchEvent(new Event("kgm-auth-changed"));
+          return;
+        }
+        setStatus("offline");
+        emitAuthState({ authenticated: true, user: cached || undefined, token: stored, validationPending: true });
       })
       .finally(() => setSessionChecking(false));
   }, []);
@@ -307,11 +372,14 @@ export default function VillageChat() {
         { method: "POST", body: JSON.stringify(payload) },
       );
       localStorage.setItem(TOKEN_KEY, result.token);
+      cacheAccount(result.user);
       setToken(result.token);
       setAccount(result.user);
       setMessages([]);
       setUnreadCount(0);
       setStatus("connecting");
+      emitAuthState({ authenticated: true, user: result.user, token: result.token });
+      window.dispatchEvent(new Event("kgm-auth-changed"));
       form.reset();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not sign in");
@@ -322,6 +390,7 @@ export default function VillageChat() {
 
   function signOut() {
     localStorage.removeItem(TOKEN_KEY);
+    cacheAccount(null);
     setToken("");
     setAccount(null);
     setMessages([]);
@@ -334,6 +403,8 @@ export default function VillageChat() {
     setError("");
     latestIdRef.current = "";
     bootstrappedRef.current = false;
+    emitAuthState({ authenticated: false });
+    window.dispatchEvent(new Event("kgm-auth-changed"));
   }
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
@@ -393,7 +464,7 @@ export default function VillageChat() {
       <button className="village-chat-launcher" onClick={() => openChat()} aria-label={`Open Koratlagudem Village Chat${unreadCount ? `, ${unreadCount} unread messages` : ""}`}>
         <span className="village-chat-pulse" aria-hidden="true" />
         <span className="village-chat-icon" aria-hidden="true">☺</span>
-        <span><strong>Village Chat</strong><small>{account ? "మన ఊరి మాటలు · Live" : "Sign in / Register"}</small></span>
+        <span><strong>Village Chat</strong><small>{account ? "మన ఊరి మాటలు · Live" : token ? "Restoring your KGM session…" : "Sign in / Register"}</small></span>
         {unreadCount > 0 && <b className="village-chat-unread-badge" aria-label={`${unreadCount} unread messages`}>{unreadLabel}</b>}
       </button>
 
@@ -405,11 +476,12 @@ export default function VillageChat() {
 
       {open && <div className="village-chat-shell" role="dialog" aria-modal="true" aria-label="Koratlagudem Village Chat">
         <header className="village-chat-head">
-          <div><span className={`chat-status ${account ? status : "connecting"}`} /><div><strong>KGM Village Chat</strong><small>{!account ? "Sign in to join our village room" : status === "live" ? "Live public room · Koratlagudem" : status === "offline" ? "Trying to reconnect…" : "Connecting…"}</small></div></div>
+          <div><span className={`chat-status ${account ? status : "connecting"}`} /><div><strong>KGM Village Chat</strong><small>{!account ? (token ? "Restoring your KGM session…" : "Sign in to join our village room") : status === "live" ? "Live public room · Koratlagudem" : status === "offline" ? "Trying to reconnect…" : "Connecting…"}</small></div></div>
           <button onClick={() => setOpen(false)} aria-label="Close chat">×</button>
         </header>
 
         {!account ? <div className="village-chat-auth">
+          {token ? <div className="chat-empty"><span>↻</span><strong>Restoring your KGM account.</strong><p>Your saved login is still here. KGM will reconnect when the network is ready.</p></div> : <>
           <div className="chat-auth-tabs" role="tablist" aria-label="KGM account access">
             <button type="button" className={authMode === "signin" ? "active" : ""} onClick={() => { setAuthMode("signin"); setError(""); }}>Sign in</button>
             <button type="button" className={authMode === "register" ? "active" : ""} onClick={() => { setAuthMode("register"); setError(""); }}>Create account</button>
@@ -429,6 +501,7 @@ export default function VillageChat() {
             <button className="chat-join-button" type="submit" disabled={authBusy || sessionChecking}>{authBusy ? "Please wait…" : authMode === "register" ? "Create account & enter chat →" : "Sign in & open chat →"}</button>
             {error && <p className="chat-error">{error}</p>}
           </form>
+          </>}
         </div> : <>
           <div className="village-chat-safety"><span>🛡</span><p><strong>Public village room.</strong> No DMs, photos, links, phone numbers or email addresses. Report anything uncomfortable.</p></div>
           <div className="village-chat-meta">
