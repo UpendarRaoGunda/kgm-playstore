@@ -39,13 +39,13 @@ test("renders the APK hub with preview metadata and core safety copy", async () 
   assert.match(html, /Published apps will include a verified APK/i);
   assert.match(html, /Download KGM Android APK/i);
   assert.match(html, /Install on PC/i);
-  assert.match(html, /rel=["']manifest["'][^>]*site\.webmanifest|site\.webmanifest[^>]*rel=["']manifest["']/i);
+  assert.match(html, /rel=["']manifest["'][^>]*site-manifest\.json|site-manifest\.json[^>]*rel=["']manifest["']/i);
   assert.match(html, /kgm-playstore\.onrender\.com\/downloads\/kgm-playstore-latest\.apk/i);
 });
 
 test("publishes a complete and privacy-conscious PWA shell", async () => {
   const manifest = JSON.parse(
-    await readFile(new URL("../public/site.webmanifest", import.meta.url), "utf8"),
+    await readFile(new URL("../public/site-manifest.json", import.meta.url), "utf8"),
   );
   const serviceWorker = await readFile(
     new URL("../public/service-worker.js", import.meta.url),

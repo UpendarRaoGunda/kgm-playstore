@@ -1,10 +1,10 @@
-const VERSION = "kgm-pwa-v1";
+const VERSION = "kgm-pwa-v2";
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const APP_SHELL = [
   "/",
   "/offline.html",
-  "/site.webmanifest",
+  "/site-manifest.json",
   "/favicon.svg",
   "/icons/icon-192.png",
   "/icons/icon-512.png",

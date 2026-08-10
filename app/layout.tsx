@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     shortcut: "/favicon.svg",
     apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
   },
-  manifest: "/site.webmanifest",
+  manifest: "/site-manifest.json",
 };
 
 export const viewport: Viewport = {
