@@ -5,6 +5,7 @@ import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } 
 import { join, basename } from "node:path";
 import { Readable } from "node:stream";
 import crypto from "node:crypto";
+import { COSMIC_RHYMES_STEM_MOVIES } from "./cosmic-rhymes-youtube.mjs";
 
 const PORT = Number(process.env.PORT || 10000);
 const APP_PORT = Number(process.env.KGM_INTERNAL_PORT || 10001);
@@ -33,7 +34,8 @@ const PINNED_STEM_MOVIES = [
       "What examples show the relationship between evidence, discovery and human values?"
     ],
     like_count: 0
-  }
+  },
+  ...COSMIC_RHYMES_STEM_MOVIES
 ];
 mkdirSync(MOVIES_DIR, { recursive: true });
 
