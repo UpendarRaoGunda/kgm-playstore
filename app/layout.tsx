@@ -5,6 +5,7 @@ import CommunityShelf from "./CommunityShelf";
 import VillageChat from "./VillageChat";
 import KgmCredits from "./KgmCredits";
 import FreeKnowledgeMission from "./FreeKnowledgeMission";
+import YouthverseExperience from "./YouthverseExperience";
 import "./globals.css";
 import "./music.css";
 import "./music-library-manager.css";
@@ -16,10 +17,11 @@ import "./design-system.css";
 import "./ux-polish.css";
 import "./telugu-typography.css";
 import "./free-knowledge-mission.css";
+import "./youthverse.css";
 
 export const metadata: Metadata = {
-  title: "KGM · Koratlagudem Community Hub",
-  description: "A free-for-everyone community hub for apps, music, gallery and Village Chat created and shared by Koratlagudem.",
+  title: "KGM · Koratlagudem Youthverse",
+  description: "Koratlagudem's digital playground for community apps, music, photos, videos, creators and Village Chat — free for everyone.",
   other: {
     "codex-preview": "development",
   },
@@ -41,6 +43,7 @@ export default function RootLayout({
         <a className="kgm-skip-link" href="#apps">Skip to community shelf</a>
         <FreeKnowledgeMission />
         {children}
+        <YouthverseExperience />
         <CommunityShelf />
         <KgmCredits />
         <MusicLibraryManager />
