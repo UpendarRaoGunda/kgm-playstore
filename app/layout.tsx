@@ -5,7 +5,7 @@ import CommunityShelf from "./CommunityShelf";
 import VillageChat from "./VillageChat";
 import ScienceCinema from "./ScienceCinema";
 import ScienceCinemaDrive from "./ScienceCinemaDrive";
-import CinemaComingSoon from "./CinemaComingSoon";
+import CinemaLegalMovies from "./CinemaLegalMovies";
 import ProfileEditor from "./ProfileEditor";
 import KgmCredits from "./KgmCredits";
 import FreeKnowledgeMission from "./FreeKnowledgeMission";
@@ -33,7 +33,7 @@ import "./overlay-layer-fixes.css";
 import "./chat-notifications.css";
 import "./science-cinema.css";
 import "./science-cinema-drive.css";
-import "./cinema-coming-soon.css";
+import "./cinema-legal-movies.css";
 import "./profile-avatar.css";
 import "./profile-cinema.css";
 import "./profile-logout.css";
@@ -87,7 +87,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <VillageChat />
         <ScienceCinema />
         <ScienceCinemaDrive />
-        <CinemaComingSoon />
+        <CinemaLegalMovies />
         <CinemaCategoryScroller />
         <ProfileEditor />
         <PwaManager />
