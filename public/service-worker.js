@@ -1,4 +1,4 @@
-const VERSION = "kgm-pwa-v4";
+const VERSION = "kgm-pwa-v5";
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const APP_SHELL = [
@@ -12,7 +12,12 @@ const APP_SHELL = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL)));
+  event.waitUntil(
+    Promise.all([
+      caches.open(SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL)),
+      self.skipWaiting(),
+    ]),
+  );
 });
 
 self.addEventListener("activate", (event) => {

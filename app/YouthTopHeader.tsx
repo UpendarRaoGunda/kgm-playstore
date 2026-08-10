@@ -5,11 +5,36 @@ import KgmAvatar, { avatarFromUploads, isKgmAvatarUpload, type KgmAvatarUpload, 
 import { PwaInstallButton } from "./PwaInstall";
 
 type Account = { id: string; email: string; nickname: string; role: "Child" | "Teen" | "Adult"; created_at?: string };
+type AuthStateDetail = { authenticated?: boolean; user?: Account; token?: string; validationPending?: boolean };
 
 const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
 const TOKEN_KEY = "kgm-village-chat-token-v2";
+const ACCOUNT_CACHE_KEY = "kgm-account-cache-v1";
 const THEME_KEY = "kgm-youth-theme-v1";
 const LANG_KEY = "kgm-language-v2";
+
+function baseProfile(account: Account): KgmProfile {
+  return { ...account, avatar: { type: "preset", preset: "orbit-pop", url: null } };
+}
+
+function readCachedAccount(): Account | null {
+  try {
+    const raw = localStorage.getItem(ACCOUNT_CACHE_KEY);
+    if (!raw) return null;
+    const account = JSON.parse(raw) as Account;
+    return account?.id && account?.nickname ? account : null;
+  } catch {
+    return null;
+  }
+}
+
+function cacheAccount(account: Account | null) {
+  if (!account) {
+    localStorage.removeItem(ACCOUNT_CACHE_KEY);
+    return;
+  }
+  localStorage.setItem(ACCOUNT_CACHE_KEY, JSON.stringify(account));
+}
 
 export default function YouthTopHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -27,27 +52,29 @@ export default function YouthTopHeader() {
       return;
     }
 
+    // Mobile/PWA/WebView should show the signed-in state immediately, without
+    // waiting for Render or an avatar request to finish.
+    const cached = readCachedAccount();
+    if (cached) setAccount((current) => current?.id === cached.id ? current : baseProfile(cached));
+
     const headers = { Authorization: `Bearer ${token}` };
     try {
-      // /auth/me is the authentication source. Avatar loading is optional decoration.
       const response = await fetch(`${API}/api/kgm-chat/auth/me`, { headers, cache: "no-store" });
       if (!response.ok) {
-        // Only a rejected auth session should remove the token. This keeps mobile/WebView
-        // hamburger state independent from slower optional profile requests.
-        if (response.status === 401 || response.status === 403) {
+        // Only a real auth rejection invalidates a saved KGM login. Permission,
+        // server and network failures must never silently sign a mobile user out.
+        if (response.status === 401) {
           localStorage.removeItem(TOKEN_KEY);
+          cacheAccount(null);
           setHasSessionToken(false);
+          setAccount(null);
         }
-        throw new Error("Session unavailable");
+        return;
       }
       const me = await response.json() as Account;
+      cacheAccount(me);
       setHasSessionToken(true);
-
-      const baseProfile: KgmProfile = {
-        ...me,
-        avatar: { type: "preset", preset: "orbit-pop", url: null },
-      };
-      setAccount(baseProfile);
+      setAccount(baseProfile(me));
 
       try {
         const uploadsResponse = await fetch(`${API}/api/kgm-uploads/mine`, { headers, cache: "no-store" });
@@ -56,10 +83,10 @@ export default function YouthTopHeader() {
         const avatars = (uploads.items || []).filter((item) => isKgmAvatarUpload(item) && item.kind === "image");
         setAccount({ ...me, avatar: avatarFromUploads(avatars) });
       } catch {
-        // Keep the authenticated profile even if optional avatar retrieval fails.
+        // Avatar decoration is optional; keep the authenticated profile.
       }
     } catch {
-      setAccount(null);
+      // Offline/slow Render: preserve the token and cached authenticated identity.
     }
   }
 
@@ -69,7 +96,12 @@ export default function YouthTopHeader() {
     setDark(nextDark);
     document.documentElement.classList.toggle("kgm-youth-dark", nextDark);
     setLang(localStorage.getItem(LANG_KEY) === "te" ? "te" : "en");
-    setHasSessionToken(Boolean(localStorage.getItem(TOKEN_KEY)));
+    const token = localStorage.getItem(TOKEN_KEY) || "";
+    setHasSessionToken(Boolean(token));
+    if (token) {
+      const cached = readCachedAccount();
+      if (cached) setAccount(baseProfile(cached));
+    }
     void syncAccount();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -81,6 +113,12 @@ export default function YouthTopHeader() {
       if (currentToken === previousToken) return;
       previousToken = currentToken;
       setHasSessionToken(Boolean(currentToken));
+      if (currentToken) {
+        const cached = readCachedAccount();
+        if (cached) setAccount(baseProfile(cached));
+      } else {
+        setAccount(null);
+      }
       void syncAccount();
     }, 600);
     return () => window.clearInterval(timer);
@@ -97,6 +135,23 @@ export default function YouthTopHeader() {
       if (next?.id) {
         setAccount(next);
         setHasSessionToken(true);
+        cacheAccount({ id: next.id, email: next.email, nickname: next.nickname, role: next.role, created_at: next.created_at });
+      }
+    };
+    const handleAuthState = (event: Event) => {
+      const detail = (event as CustomEvent<AuthStateDetail>).detail || {};
+      if (detail.authenticated === false) {
+        setHasSessionToken(false);
+        setAccount(null);
+        cacheAccount(null);
+        return;
+      }
+      if (detail.authenticated) {
+        setHasSessionToken(true);
+        if (detail.user?.id) {
+          cacheAccount(detail.user);
+          setAccount(baseProfile(detail.user));
+        }
       }
     };
     const handleLanguage = (event: Event) => {
@@ -104,27 +159,36 @@ export default function YouthTopHeader() {
       if (next) setLang(next);
     };
     const handleAuthChanged = () => {
-      setHasSessionToken(Boolean(localStorage.getItem(TOKEN_KEY)));
+      const token = localStorage.getItem(TOKEN_KEY) || "";
+      setHasSessionToken(Boolean(token));
+      if (token) {
+        const cached = readCachedAccount();
+        if (cached) setAccount(baseProfile(cached));
+      } else {
+        setAccount(null);
+      }
       void syncAccount();
     };
     const handleStorage = (event: StorageEvent) => {
-      if (event.key !== TOKEN_KEY) return;
-      setHasSessionToken(Boolean(event.newValue));
-      void syncAccount();
-    };
-    const handleFocus = () => {
-      setHasSessionToken(Boolean(localStorage.getItem(TOKEN_KEY)));
-      void syncAccount();
-    };
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") {
-        setHasSessionToken(Boolean(localStorage.getItem(TOKEN_KEY)));
-        void syncAccount();
+      if (event.key !== TOKEN_KEY && event.key !== ACCOUNT_CACHE_KEY) return;
+      const token = localStorage.getItem(TOKEN_KEY) || "";
+      setHasSessionToken(Boolean(token));
+      if (token) {
+        const cached = readCachedAccount();
+        if (cached) setAccount(baseProfile(cached));
+      } else {
+        setAccount(null);
       }
+      void syncAccount();
+    };
+    const handleFocus = () => { void syncAccount(); };
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") void syncAccount();
     };
 
     window.addEventListener("kgm-chat-unread", handleUnread as EventListener);
     window.addEventListener("kgm-profile-updated", handleProfile as EventListener);
+    window.addEventListener("kgm-auth-state", handleAuthState as EventListener);
     window.addEventListener("kgm-language-changed", handleLanguage as EventListener);
     window.addEventListener("kgm-auth-changed", handleAuthChanged);
     window.addEventListener("storage", handleStorage);
@@ -133,6 +197,7 @@ export default function YouthTopHeader() {
     return () => {
       window.removeEventListener("kgm-chat-unread", handleUnread as EventListener);
       window.removeEventListener("kgm-profile-updated", handleProfile as EventListener);
+      window.removeEventListener("kgm-auth-state", handleAuthState as EventListener);
       window.removeEventListener("kgm-language-changed", handleLanguage as EventListener);
       window.removeEventListener("kgm-auth-changed", handleAuthChanged);
       window.removeEventListener("storage", handleStorage);
@@ -156,9 +221,12 @@ export default function YouthTopHeader() {
   function toggleMenu() {
     const next = !menuOpen;
     if (next) {
-      // Mobile web and Android WebView must reflect the locally stored session immediately.
-      // Do not wait for a network round-trip before choosing Log out vs Sign in/Register.
-      setHasSessionToken(Boolean(localStorage.getItem(TOKEN_KEY)));
+      const token = localStorage.getItem(TOKEN_KEY) || "";
+      setHasSessionToken(Boolean(token));
+      if (token) {
+        const cached = readCachedAccount();
+        if (cached) setAccount(baseProfile(cached));
+      }
     }
     setMenuOpen(next);
     if (next) void syncAccount();
@@ -167,9 +235,11 @@ export default function YouthTopHeader() {
   function logOut() {
     closeMenu();
     localStorage.removeItem(TOKEN_KEY);
+    cacheAccount(null);
     setHasSessionToken(false);
     setAccount(null);
     setChatUnread(0);
+    window.dispatchEvent(new CustomEvent("kgm-auth-state", { detail: { authenticated: false } }));
     window.dispatchEvent(new Event("kgm-auth-changed"));
     window.location.reload();
   }
