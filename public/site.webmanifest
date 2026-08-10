@@ -1,0 +1,10 @@
+{
+  "name": "Koratlagudem APK Hub",
+  "short_name": "KGM APK Hub",
+  "description": "Android apps created by young makers in Koratlagudem.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbf7ef",
+  "theme_color": "#7657ed",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

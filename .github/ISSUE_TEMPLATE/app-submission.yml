@@ -1,0 +1,69 @@
+name: Submit an app
+description: Propose a Koratlagudem-made Android app for mentor review and publication.
+title: "[APP] "
+labels: ["app submission", "review needed"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for building something! A parent, teacher or mentor should help creators under 18 complete this form. Do not share a home address, phone number, school ID or other private information.
+  - type: input
+    id: app-name
+    attributes:
+      label: App name
+      placeholder: Example: KGM Math Sprint
+    validations:
+      required: true
+  - type: textarea
+    id: purpose
+    attributes:
+      label: What does the app help people do?
+      description: Explain the problem and the main experience in a few sentences.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version and minimum Android version
+      placeholder: 1.0.0 · Android 8+
+    validations:
+      required: true
+  - type: textarea
+    id: permissions
+    attributes:
+      label: Permissions used
+      description: List every Android permission and why the app needs it. Write “None” if it asks for no permissions.
+    validations:
+      required: true
+  - type: textarea
+    id: data
+    attributes:
+      label: Data and privacy
+      description: Does it collect, store or send any personal data? Does it contain ads, analytics or third-party SDKs?
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source-code link
+      description: A public repository is strongly preferred for review.
+      placeholder: https://github.com/...
+  - type: input
+    id: apk
+    attributes:
+      label: APK release link
+      description: Link to a versioned release file. Do not paste secrets or private credentials.
+      placeholder: https://github.com/.../releases/...
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Creator and mentor checks
+      options:
+        - label: The APK is our own work or uses only assets/code we are allowed to use.
+          required: true
+        - label: A parent, teacher or mentor has reviewed this submission if the creator is under 18.
+          required: true
+        - label: The app contains no hidden tracking, harmful code or misleading install prompts.
+          required: true
