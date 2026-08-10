@@ -1,4 +1,4 @@
-const VERSION = "kgm-pwa-v2";
+const VERSION = "kgm-pwa-v3";
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const APP_SHELL = [
@@ -25,6 +25,22 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("message", (event) => {
   if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
+
+self.addEventListener("notificationclick", (event) => {
+  if (event.notification?.tag !== "kgm-village-chat") return;
+  event.notification.close();
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const client of windows) {
+      if (new URL(client.url).origin === self.location.origin) {
+        await client.focus();
+        client.postMessage({ type: "OPEN_KGM_CHAT" });
+        return;
+      }
+    }
+    await self.clients.openWindow("/?openChat=1");
+  })());
 });
 
 function isPrivateOrDynamic(pathname) {
