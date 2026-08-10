@@ -14,12 +14,14 @@ const LANG_KEY = "kgm-language-v2";
 export default function YouthTopHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [account, setAccount] = useState<KgmProfile | null>(null);
+  const [hasSessionToken, setHasSessionToken] = useState(false);
   const [dark, setDark] = useState(true);
   const [chatUnread, setChatUnread] = useState(0);
   const [lang, setLang] = useState<"en" | "te">("en");
 
   async function syncAccount() {
     const token = localStorage.getItem(TOKEN_KEY) || "";
+    setHasSessionToken(Boolean(token));
     if (!token) {
       setAccount(null);
       return;
@@ -27,11 +29,19 @@ export default function YouthTopHeader() {
 
     const headers = { Authorization: `Bearer ${token}` };
     try {
-      // Authentication is determined only by /auth/me. Avatar loading is optional
-      // decoration and must never make a valid signed-in session look logged out.
+      // /auth/me is the authentication source. Avatar loading is optional decoration.
       const response = await fetch(`${API}/api/kgm-chat/auth/me`, { headers, cache: "no-store" });
-      if (!response.ok) throw new Error("Session unavailable");
+      if (!response.ok) {
+        // Only a rejected auth session should remove the token. This keeps mobile/WebView
+        // hamburger state independent from slower optional profile requests.
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem(TOKEN_KEY);
+          setHasSessionToken(false);
+        }
+        throw new Error("Session unavailable");
+      }
       const me = await response.json() as Account;
+      setHasSessionToken(true);
 
       const baseProfile: KgmProfile = {
         ...me,
@@ -59,6 +69,7 @@ export default function YouthTopHeader() {
     setDark(nextDark);
     document.documentElement.classList.toggle("kgm-youth-dark", nextDark);
     setLang(localStorage.getItem(LANG_KEY) === "te" ? "te" : "en");
+    setHasSessionToken(Boolean(localStorage.getItem(TOKEN_KEY)));
     void syncAccount();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -69,6 +80,7 @@ export default function YouthTopHeader() {
       const currentToken = localStorage.getItem(TOKEN_KEY) || "";
       if (currentToken === previousToken) return;
       previousToken = currentToken;
+      setHasSessionToken(Boolean(currentToken));
       void syncAccount();
     }, 600);
     return () => window.clearInterval(timer);
@@ -82,22 +94,40 @@ export default function YouthTopHeader() {
     };
     const handleProfile = (event: Event) => {
       const next = (event as CustomEvent<KgmProfile>).detail;
-      if (next?.id) setAccount(next);
+      if (next?.id) {
+        setAccount(next);
+        setHasSessionToken(true);
+      }
     };
     const handleLanguage = (event: Event) => {
       const next = (event as CustomEvent<{ lang?: "en" | "te" }>).detail?.lang;
       if (next) setLang(next);
     };
-    const handleAuthChanged = () => { void syncAccount(); };
-    const handleFocus = () => { void syncAccount(); };
+    const handleAuthChanged = () => {
+      setHasSessionToken(Boolean(localStorage.getItem(TOKEN_KEY)));
+      void syncAccount();
+    };
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== TOKEN_KEY) return;
+      setHasSessionToken(Boolean(event.newValue));
+      void syncAccount();
+    };
+    const handleFocus = () => {
+      setHasSessionToken(Boolean(localStorage.getItem(TOKEN_KEY)));
+      void syncAccount();
+    };
     const handleVisibility = () => {
-      if (document.visibilityState === "visible") void syncAccount();
+      if (document.visibilityState === "visible") {
+        setHasSessionToken(Boolean(localStorage.getItem(TOKEN_KEY)));
+        void syncAccount();
+      }
     };
 
     window.addEventListener("kgm-chat-unread", handleUnread as EventListener);
     window.addEventListener("kgm-profile-updated", handleProfile as EventListener);
     window.addEventListener("kgm-language-changed", handleLanguage as EventListener);
     window.addEventListener("kgm-auth-changed", handleAuthChanged);
+    window.addEventListener("storage", handleStorage);
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibility);
     return () => {
@@ -105,6 +135,7 @@ export default function YouthTopHeader() {
       window.removeEventListener("kgm-profile-updated", handleProfile as EventListener);
       window.removeEventListener("kgm-language-changed", handleLanguage as EventListener);
       window.removeEventListener("kgm-auth-changed", handleAuthChanged);
+      window.removeEventListener("storage", handleStorage);
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
@@ -115,11 +146,20 @@ export default function YouthTopHeader() {
   function jump(selector: string) { closeMenu(); document.querySelector(selector)?.scrollIntoView({ behavior: "smooth", block: "start" }); }
   function clickExisting(selector: string) { closeMenu(); (document.querySelector(selector) as HTMLElement | null)?.click(); }
   function openCinema() { closeMenu(); window.dispatchEvent(new Event("kgm-open-cinema")); }
-  function openAccount() { closeMenu(); if (account) window.dispatchEvent(new Event("kgm-open-profile")); else clickExisting(".kgm-account-nav-link"); }
+  function openAccount() {
+    closeMenu();
+    if (account || hasSessionToken) window.dispatchEvent(new Event("kgm-open-profile"));
+    else clickExisting(".kgm-account-nav-link");
+  }
   function toggleLanguage() { closeMenu(); window.dispatchEvent(new Event("kgm-toggle-language")); }
 
   function toggleMenu() {
     const next = !menuOpen;
+    if (next) {
+      // Mobile web and Android WebView must reflect the locally stored session immediately.
+      // Do not wait for a network round-trip before choosing Log out vs Sign in/Register.
+      setHasSessionToken(Boolean(localStorage.getItem(TOKEN_KEY)));
+    }
     setMenuOpen(next);
     if (next) void syncAccount();
   }
@@ -127,6 +167,7 @@ export default function YouthTopHeader() {
   function logOut() {
     closeMenu();
     localStorage.removeItem(TOKEN_KEY);
+    setHasSessionToken(false);
     setAccount(null);
     setChatUnread(0);
     window.dispatchEvent(new Event("kgm-auth-changed"));
@@ -141,6 +182,7 @@ export default function YouthTopHeader() {
   }
 
   const unreadLabel = chatUnread > 99 ? "99+" : chatUnread;
+  const signedIn = hasSessionToken || Boolean(account);
   const labels = lang === "te" ? {
     discover: "అన్వేషించండి", apps: "యాప్స్", music: "సంగీతం", cinema: "సినిమా", gallery: "గ్యాలరీ", chat: "చాట్",
     install: "ఆండ్రాయిడ్ ఇన్‌స్టాల్", safety: "భద్రత", creators: "యువ సృష్టికర్తలు", language: "English", signIn: "సైన్ ఇన్ / నమోదు", logout: "లాగ్ అవుట్",
@@ -171,9 +213,9 @@ export default function YouthTopHeader() {
           <div className="kgm-youth-install"><PwaInstallButton /></div>
           <button className="kgm-youth-language" type="button" onClick={toggleLanguage}>{labels.language}</button>
           <button className="kgm-youth-theme-button" type="button" onClick={toggleTheme} aria-label="Toggle light or dark appearance">{dark ? "☀" : "☾"}</button>
-          <button className="kgm-youth-account" type="button" onClick={openAccount} title={account ? `Edit ${account.nickname}'s profile` : "Sign in or create account"}>
+          <button className="kgm-youth-account" type="button" onClick={openAccount} title={account ? `Edit ${account.nickname}'s profile` : signedIn ? "Open your KGM profile" : "Sign in or create account"}>
             {account ? <KgmAvatar value={account.avatar} nickname={account.nickname} size="xs" className="kgm-header-avatar" /> : <span>☺</span>}
-            <strong>{account?.nickname || (lang === "te" ? "సైన్ ఇన్" : "Sign in")}</strong>
+            <strong>{account?.nickname || (signedIn ? (lang === "te" ? "ప్రొఫైల్" : "Profile") : (lang === "te" ? "సైన్ ఇన్" : "Sign in"))}</strong>
           </button>
           <button className={`kgm-youth-menu${menuOpen ? " open" : ""}`} type="button" onClick={toggleMenu} aria-label="Open KGM menu" aria-expanded={menuOpen}>
             <i /><i /><i />
@@ -192,7 +234,7 @@ export default function YouthTopHeader() {
         <button type="button" onClick={() => jump("#safety")}><span>✓</span>{labels.safety}</button>
         <button type="button" onClick={() => jump("#build")}><span>＋</span>{labels.creators}</button>
         <button type="button" onClick={toggleLanguage}><span>🌐</span>{labels.language}</button>
-        {account ? (
+        {signedIn ? (
           <button type="button" onClick={logOut}><span>↪</span>{labels.logout}</button>
         ) : (
           <button type="button" onClick={openAccount}><span>☺</span>{labels.signIn}</button>
