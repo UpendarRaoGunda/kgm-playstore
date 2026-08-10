@@ -27,13 +27,6 @@ const creators = [
   { name: "Marthi Jashwanth", label: "Co-Founder", glyph: "MJ", vibe: "Young maker" },
 ];
 
-const fallbackDrops = [
-  { kind: "apk" as UploadKind, title: "Mana Ooru Quiz", kicker: "APP DROP", glyph: "ఊ", meta: "Built in Koratlagudem" },
-  { kind: "audio" as UploadKind, title: "KGM Folk Radio", kicker: "NOW PLAYING", glyph: "♪", meta: "Village sounds" },
-  { kind: "video" as UploadKind, title: "Village Moments", kicker: "VIDEO", glyph: "▶", meta: "Made by the community" },
-  { kind: "image" as UploadKind, title: "KGM Gallery", kicker: "PHOTO DROP", glyph: "✦", meta: "Photos from our people" },
-];
-
 function kindGlyph(kind: UploadKind) {
   if (kind === "audio") return "♪";
   if (kind === "video") return "▶";
@@ -114,67 +107,56 @@ export default function YouthverseExperience() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  const latest = useMemo(() => uploads.slice(0, 6), [uploads]);
+  const latest = useMemo(() => uploads.slice(0, 3), [uploads]);
 
   const experience = (
     <>
-      <section className="yv-shell" aria-label="KGM Youthverse">
+      <section className="yv-shell yv-shell-simplified" aria-label="KGM Youthverse">
         <div className="yv-noise" aria-hidden="true" />
         <div className="yv-topline">
           <span className="yv-live"><i /> KORATLAGUDEM IS CREATING</span>
           <button type="button" className="yv-theme" onClick={toggleTheme} aria-label="Toggle theme">{dark ? "☀" : "☾"}</button>
         </div>
 
-        <div className="yv-hero-grid">
+        <div className="yv-hero-grid yv-hero-grid-simple">
           <div className="yv-hero-copy">
             <span className="yv-kicker">KGM° · KORATLAGUDEM'S DIGITAL PLAYGROUND</span>
             <h1>MADE HERE.<br/><em>SHARED EVERYWHERE.</em></h1>
-            <p>{account ? `Yo ${account.nickname} 👋 what are we creating or learning today?` : "Apps, science cinema, music, photos, videos and ideas from a village that refuses to think small."}</p>
-            <div className="yv-actions">
-              <button type="button" className="yv-primary" onClick={openCinema}>Watch Science Cinema <span>▶</span></button>
-              <button type="button" className="yv-secondary" onClick={openUpload}>＋ Drop something</button>
+            <p>{account ? `Yo ${account.nickname} 👋 see what our village is creating today.` : "Apps, science, music and creations from Koratlagudem — made locally, open to everyone."}</p>
+            <div className="yv-actions yv-actions-simple">
+              <button type="button" className="yv-primary" onClick={() => jump("kgm-happening")}>Explore what&apos;s new <span>→</span></button>
             </div>
-            <div className="yv-pills">
-              <button onClick={() => jump("apps")}>🎮 Apps</button>
-              <button onClick={openCinema}>🎬 Science Cinema</button>
-              <button onClick={() => jump("music")}>🎧 Music</button>
-              <button onClick={() => clickExisting(".kgm-gallery-nav-link")}>✦ Gallery</button>
-              <button onClick={() => clickExisting(".kgm-chat-nav-link")}>💬 Chat</button>
-            </div>
-          </div>
-
-          <div className="yv-stage" aria-label="KGM live activity preview">
-            <div className="yv-glow yv-glow-one" />
-            <div className="yv-glow yv-glow-two" />
-            <article className="yv-float yv-float-a"><span>APK</span><strong>Mana Ooru Quiz</strong><small>fresh from the lab</small></article>
-            <article className="yv-float yv-float-b"><span>🎬</span><strong>Science Cinema</strong><small>STEM films · free</small></article>
-            <article className="yv-float yv-float-c"><span>✦</span><strong>Gallery Drop</strong><small>photos · videos</small></article>
-            <div className="yv-center-orb"><span>KGM</span><small>YOUTHVERSE</small></div>
           </div>
         </div>
 
-        <div className="yv-marquee" aria-hidden="true"><span>CREATE ✦ WATCH ✦ QUESTION ✦ SHARE ✦ PLAY ✦ BUILD ✦ నేర్చుకో ✦ CREATE ✦ WATCH ✦ QUESTION ✦</span></div>
-
-        <section className="yv-section yv-trending">
-          <div className="yv-section-head"><div><span>🔥 TRENDING IN KGM</span><h2>Fresh drops from the village.</h2></div><button onClick={() => clickExisting(".kgm-gallery-nav-link")}>See all ↗</button></div>
-          <div className="yv-drop-row">
-            {latest.length ? latest.map((item, index) => (
-              <button className={`yv-drop yv-kind-${item.kind}`} key={item.id} onClick={() => clickExisting(".kgm-gallery-nav-link")} style={{"--yv-i": index} as CSSProperties}>
-                <span className="yv-drop-glyph">{kindGlyph(item.kind)}</span>
-                <small>{item.kind === "audio" ? "MUSIC DROP" : item.kind === "apk" ? "COMMUNITY APK" : `${item.kind.toUpperCase()} DROP`}</small>
+        <section className="yv-happening" id="kgm-happening" aria-label="Happening in KGM">
+          <div className="yv-section-head yv-happening-head">
+            <div><span>HAPPENING IN KGM</span><h2>See what the village is making.</h2></div>
+            <small>Swipe to explore →</small>
+          </div>
+          <div className="yv-happening-row">
+            {latest.map((item, index) => (
+              <button key={item.id} className={`yv-happening-card yv-kind-${item.kind}`} onClick={() => clickExisting(".kgm-gallery-nav-link")} style={{"--yv-i": index} as CSSProperties}>
+                <span className="yv-happening-icon">{kindGlyph(item.kind)}</span>
+                <small>{item.kind === "apk" ? "NEW APP" : item.kind === "audio" ? "NEW MUSIC" : item.kind === "video" ? "NEW VIDEO" : "COMMUNITY DROP"}</small>
                 <strong>{item.title}</strong>
-                <em>by {item.uploader.nickname}</em>
-              </button>
-            )) : fallbackDrops.map((item, index) => (
-              <button className={`yv-drop yv-kind-${item.kind}`} key={item.title} onClick={() => item.kind === "audio" ? jump("music") : item.kind === "apk" ? jump("apps") : clickExisting(".kgm-gallery-nav-link")} style={{"--yv-i": index} as CSSProperties}>
-                <span className="yv-drop-glyph">{item.glyph}</span><small>{item.kicker}</small><strong>{item.title}</strong><em>{item.meta}</em>
+                <p>by {item.uploader.nickname}</p>
+                <b>Open →</b>
               </button>
             ))}
+            <button className="yv-happening-card yv-happening-cinema" onClick={openCinema}>
+              <span className="yv-happening-icon">🎬</span><small>SCIENCE CINEMA</small><strong>Films that make curiosity bigger.</strong><p>STEM films · free inside KGM</p><b>Watch →</b>
+            </button>
+            <button className="yv-happening-card yv-happening-community" onClick={() => clickExisting(".kgm-gallery-nav-link")}>
+              <span className="yv-happening-icon">✦</span><small>COMMUNITY</small><strong>Photos, videos, music and village creations.</strong><p>Fresh from KGM creators</p><b>Explore →</b>
+            </button>
           </div>
         </section>
 
+        <div className="yv-marquee" aria-hidden="true"><span>CREATE ✦ WATCH ✦ QUESTION ✦ SHARE ✦ PLAY ✦ BUILD ✦ నేర్చుకో ✦ CREATE ✦ WATCH ✦ QUESTION ✦</span></div>
+
         <section className="yv-section yv-for-you">
-          <div className="yv-section-head"><div><span>FOR YOU</span><h2>One feed. Every kind of creativity and curiosity.</h2></div><span className="yv-safety">🛡 Community moderated</span></div>
+          <div className="yv-section-head"><div><span>DISCOVER</span><h2>One place for every kind of curiosity.</h2></div><span className="yv-safety">🛡 Community moderated</span></div>
           <div className="yv-feed-grid">
             <button className="yv-feed-card yv-feed-cinema" onClick={openCinema}><span>STEM ONLY · FREE</span><strong>KGM Science Cinema</strong><p>Space, physics, biology, Earth, engineering and more—watch inside KGM.</p><b>START WATCHING ▶</b></button>
             <button className="yv-feed-card yv-feed-big" onClick={() => clickExisting(".kgm-gallery-nav-link")}><span>PHOTO + VIDEO</span><strong>Village moments deserve a feed, not a folder.</strong><p>See the newest visual drops from KGM creators.</p><b>OPEN GALLERY ↗</b></button>
@@ -185,7 +167,7 @@ export default function YouthverseExperience() {
         </section>
 
         <section className="yv-section yv-creators">
-          <div className="yv-section-head"><div><span>CREATORS OF KGM</span><h2>People are the platform.</h2></div><span className="yv-founder-note">FOUNDING CREW</span></div>
+          <div className="yv-section-head"><div><span>BUILT BY OUR VILLAGE</span><h2>People are the platform.</h2></div><span className="yv-founder-note">FOUNDING CREW</span></div>
           <div className="yv-creator-grid">
             {creators.map((creator, index) => <article className="yv-creator" key={creator.name} style={{"--yv-i": index} as CSSProperties}><div className="yv-avatar">{creator.glyph}</div><div><small>{creator.label}</small><strong>{creator.name}</strong><span>{creator.vibe}</span></div><b>FOUNDING MEMBER</b></article>)}
             <button className="yv-creator yv-creator-join" onClick={openProfile}><div className="yv-avatar">＋</div><div><small>YOUR TURN</small><strong>{account ? "Style your KGM profile" : "Join the creator wall"}</strong><span>{account ? "avatar · nickname · role" : "Sign in · upload · build"}</span></div><b>{account ? "EDIT ↗" : "START ↗"}</b></button>
