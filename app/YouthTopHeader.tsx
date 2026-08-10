@@ -27,12 +27,27 @@ export default function YouthTopHeader() {
 
     const headers = { Authorization: `Bearer ${token}` };
     try {
-      const [me, uploads] = await Promise.all([
-        fetch(`${API}/api/kgm-chat/auth/me`, { headers }).then((response) => response.ok ? response.json() : Promise.reject()),
-        fetch(`${API}/api/kgm-uploads/mine`, { headers }).then((response) => response.ok ? response.json() : Promise.reject()),
-      ]) as [Account, { items?: KgmAvatarUpload[] }];
-      const avatars = (uploads.items || []).filter((item) => isKgmAvatarUpload(item) && item.kind === "image");
-      setAccount({ ...me, avatar: avatarFromUploads(avatars) });
+      // Authentication is determined only by /auth/me. Avatar loading is optional
+      // decoration and must never make a valid signed-in session look logged out.
+      const response = await fetch(`${API}/api/kgm-chat/auth/me`, { headers, cache: "no-store" });
+      if (!response.ok) throw new Error("Session unavailable");
+      const me = await response.json() as Account;
+
+      const baseProfile: KgmProfile = {
+        ...me,
+        avatar: { type: "preset", preset: "orbit-pop", url: null },
+      };
+      setAccount(baseProfile);
+
+      try {
+        const uploadsResponse = await fetch(`${API}/api/kgm-uploads/mine`, { headers, cache: "no-store" });
+        if (!uploadsResponse.ok) return;
+        const uploads = await uploadsResponse.json() as { items?: KgmAvatarUpload[] };
+        const avatars = (uploads.items || []).filter((item) => isKgmAvatarUpload(item) && item.kind === "image");
+        setAccount({ ...me, avatar: avatarFromUploads(avatars) });
+      } catch {
+        // Keep the authenticated profile even if optional avatar retrieval fails.
+      }
     } catch {
       setAccount(null);
     }
@@ -62,16 +77,24 @@ export default function YouthTopHeader() {
       if (next) setLang(next);
     };
     const handleAuthChanged = () => { void syncAccount(); };
+    const handleFocus = () => { void syncAccount(); };
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") void syncAccount();
+    };
 
     window.addEventListener("kgm-chat-unread", handleUnread as EventListener);
     window.addEventListener("kgm-profile-updated", handleProfile as EventListener);
     window.addEventListener("kgm-language-changed", handleLanguage as EventListener);
     window.addEventListener("kgm-auth-changed", handleAuthChanged);
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
     return () => {
       window.removeEventListener("kgm-chat-unread", handleUnread as EventListener);
       window.removeEventListener("kgm-profile-updated", handleProfile as EventListener);
       window.removeEventListener("kgm-language-changed", handleLanguage as EventListener);
       window.removeEventListener("kgm-auth-changed", handleAuthChanged);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
