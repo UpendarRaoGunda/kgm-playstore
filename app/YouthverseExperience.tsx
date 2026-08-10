@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
+import { isKgmAvatarUpload } from "./KgmAvatar";
 
 type UploadKind = "image" | "audio" | "video" | "apk";
 type UploadItem = {
@@ -64,9 +65,9 @@ export default function YouthverseExperience() {
   }, []);
 
   useEffect(() => {
-    fetch(`${API}/api/kgm-uploads?kind=all&limit=8`)
+    fetch(`${API}/api/kgm-uploads?kind=all&limit=12`)
       .then((response) => response.ok ? response.json() : Promise.reject())
-      .then((data: { items?: UploadItem[] }) => setUploads(data.items || []))
+      .then((data: { items?: UploadItem[] }) => setUploads((data.items || []).filter((item) => !isKgmAvatarUpload(item)).slice(0, 8)))
       .catch(() => setUploads([]));
 
     const token = localStorage.getItem(TOKEN_KEY) || "";
@@ -75,6 +76,13 @@ export default function YouthverseExperience() {
       .then((response) => response.ok ? response.json() : Promise.reject())
       .then((me: Account) => setAccount(me))
       .catch(() => setAccount(null));
+
+    const handleProfile = (event: Event) => {
+      const next = (event as CustomEvent<{ id?: string; nickname?: string; role?: string }>).detail;
+      if (next?.id && next.nickname && next.role) setAccount({ id: next.id, nickname: next.nickname, role: next.role });
+    };
+    window.addEventListener("kgm-profile-updated", handleProfile as EventListener);
+    return () => window.removeEventListener("kgm-profile-updated", handleProfile as EventListener);
   }, []);
 
   function toggleTheme() {
@@ -90,6 +98,11 @@ export default function YouthverseExperience() {
 
   function openCinema() {
     window.dispatchEvent(new Event("kgm-open-cinema"));
+  }
+
+  function openProfile() {
+    if (localStorage.getItem(TOKEN_KEY)) window.dispatchEvent(new Event("kgm-open-profile"));
+    else clickExisting(".kgm-account-nav-link");
   }
 
   function openUpload() {
@@ -175,7 +188,7 @@ export default function YouthverseExperience() {
           <div className="yv-section-head"><div><span>CREATORS OF KGM</span><h2>People are the platform.</h2></div><span className="yv-founder-note">FOUNDING CREW</span></div>
           <div className="yv-creator-grid">
             {creators.map((creator, index) => <article className="yv-creator" key={creator.name} style={{"--yv-i": index} as CSSProperties}><div className="yv-avatar">{creator.glyph}</div><div><small>{creator.label}</small><strong>{creator.name}</strong><span>{creator.vibe}</span></div><b>FOUNDING MEMBER</b></article>)}
-            <button className="yv-creator yv-creator-join" onClick={() => clickExisting(".kgm-account-nav-link")}><div className="yv-avatar">＋</div><div><small>YOUR TURN</small><strong>Join the creator wall</strong><span>Sign in · upload · build</span></div><b>START ↗</b></button>
+            <button className="yv-creator yv-creator-join" onClick={openProfile}><div className="yv-avatar">＋</div><div><small>YOUR TURN</small><strong>{account ? "Style your KGM profile" : "Join the creator wall"}</strong><span>{account ? "avatar · nickname · role" : "Sign in · upload · build"}</span></div><b>{account ? "EDIT ↗" : "START ↗"}</b></button>
           </div>
         </section>
       </section>
@@ -185,7 +198,7 @@ export default function YouthverseExperience() {
         <button onClick={openCinema}><span>🎬</span><small>Cinema</small></button>
         <button className="yv-upload-dock" onClick={openUpload}><span>＋</span><small>Upload</small></button>
         <button onClick={() => clickExisting(".kgm-chat-nav-link")}><span>◌</span><small>Chat</small></button>
-        <button onClick={() => clickExisting(".kgm-account-nav-link")}><span>☺</span><small>Me</small></button>
+        <button onClick={openProfile}><span>☺</span><small>Me</small></button>
       </nav>
     </>
   );
