@@ -11,6 +11,8 @@ import FreeKnowledgeMission from "./FreeKnowledgeMission";
 import PwaManager from "./PwaInstall";
 import YouthverseExperience from "./YouthverseExperience";
 import YouthTopHeader from "./YouthTopHeader";
+import KgmLanguageBridge from "./KgmLanguageBridge";
+import CinemaCategoryScroller from "./CinemaCategoryScroller";
 import "./globals.css";
 import "./music.css";
 import "./music-library-manager.css";
@@ -31,6 +33,7 @@ import "./chat-notifications.css";
 import "./science-cinema.css";
 import "./science-cinema-drive.css";
 import "./profile-avatar.css";
+import "./hero-cinema-polish.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Youthverse",
@@ -68,6 +71,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <a className="kgm-skip-link" href="#apps">Skip to community shelf</a>
         <FreeKnowledgeMission />
+        <KgmLanguageBridge />
         <YouthTopHeader />
         {children}
         <YouthverseExperience />
@@ -78,6 +82,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <VillageChat />
         <ScienceCinema />
         <ScienceCinemaDrive />
+        <CinemaCategoryScroller />
         <ProfileEditor />
         <PwaManager />
       </body>
