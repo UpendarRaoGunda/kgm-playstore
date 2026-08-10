@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import MusicLibraryManager from "./MusicLibraryManager";
+import CommunityGallery from "./CommunityGallery";
 import VillageChat from "./VillageChat";
 import "./globals.css";
 import "./music.css";
 import "./music-library-manager.css";
+import "./community-gallery.css";
 import "./village-chat.css";
 
 const geistSans = Geist({
@@ -40,6 +42,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
         <MusicLibraryManager />
+        <CommunityGallery />
         <VillageChat />
       </body>
     </html>
