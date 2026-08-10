@@ -5,6 +5,7 @@ import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } 
 import { join, basename } from "node:path";
 import { Readable } from "node:stream";
 import crypto from "node:crypto";
+import { COSMIC_RHYMES_STEM_MOVIES } from "./cosmic-rhymes-youtube.mjs";
 
 const PORT = Number(process.env.PORT || 10000);
 const APP_PORT = Number(process.env.KGM_INTERNAL_PORT || 10001);
@@ -13,6 +14,29 @@ const MOVIES_DIR = join(STORAGE, "movies");
 const CATALOG = join(STORAGE, "catalog.json");
 const UPSTREAM = (process.env.KGM_UPSTREAM_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
 const MAX_UPLOAD = Number(process.env.KGM_CINEMA_MAX_UPLOAD_BYTES || 220 * 1024 * 1024);
+const PINNED_STEM_MOVIES = [
+  {
+    id: "youtube-fXnpFvsiCNE",
+    source: "youtube",
+    youtube_id: "fXnpFvsiCNE",
+    title: "The Ascent of Man — Jacob Bronowski",
+    description: "A landmark exploration of science, human knowledge, discovery and the responsibility that comes with understanding the world.",
+    category: "Scientists",
+    age_rating: "13+",
+    duration_label: "Documentary",
+    language: "English",
+    attribution: "Jacob Bronowski · YouTube",
+    source_page: "https://www.youtube.com/watch?v=fXnpFvsiCNE",
+    topics: ["history of science", "scientific thinking", "humanity", "ethics", "knowledge"],
+    learn: [
+      "How does scientific knowledge change human society?",
+      "Why should scientific progress be connected with responsibility and integrity?",
+      "What examples show the relationship between evidence, discovery and human values?"
+    ],
+    like_count: 0
+  },
+  ...COSMIC_RHYMES_STEM_MOVIES
+];
 mkdirSync(MOVIES_DIR, { recursive: true });
 
 const readJson = (path, fallback) => { try { return JSON.parse(readFileSync(path, "utf8")); } catch { return fallback; } };
@@ -89,8 +113,12 @@ async function handle(req, res) {
   if (url.pathname === "/api/kgm-cinema/movies" && req.method === "GET") {
     const upstream=await fetch(`${UPSTREAM}${url.pathname}${url.search}`,{headers:{authorization:req.headers.authorization||""}}); const data=await upstream.json().catch(()=>({items:[],categories:[]}));
     const local=catalog().filter(x=>x.source==="render").map(localMovie); const q=(url.searchParams.get("q")||"").toLowerCase(); const cat=url.searchParams.get("category")||"";
-    const filtered=local.filter(x=>(!cat||cat==="All"||x.category===cat)&&(!q||`${x.title} ${x.description} ${x.category}`.toLowerCase().includes(q)));
-    return json(res,200,{...data,items:[...filtered,...(data.items||[])],categories:[...new Set([...(data.categories||[]),...local.map(x=>x.category)])]});
+    const matches=(x)=>(!cat||cat==="All"||x.category===cat)&&(!q||`${x.title} ${x.description} ${x.category} ${(x.topics||[]).join(" ")}`.toLowerCase().includes(q));
+    const filtered=local.filter(matches);
+    const pinned=PINNED_STEM_MOVIES.filter(matches).filter(x=>!(data.items||[]).some(item=>item.youtube_id===x.youtube_id||item.id===x.id));
+    const featuredPinned=pinned.filter(x=>x.id==="youtube-fXnpFvsiCNE");
+    const collectionPinned=pinned.filter(x=>x.id!=="youtube-fXnpFvsiCNE");
+    return json(res,200,{...data,items:[...featuredPinned,...filtered,...(data.items||[]),...collectionPinned],categories:[...new Set([...(data.categories||[]),...PINNED_STEM_MOVIES.map(x=>x.category),...local.map(x=>x.category)])]});
   }
   if (url.pathname.startsWith("/api/kgm-")) return upstreamProxy(req,res);
   return appProxy(req,res);
