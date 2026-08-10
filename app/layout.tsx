@@ -13,6 +13,7 @@ import "./village-chat.css";
 import "./mobile-fixes.css";
 import "./design-system.css";
 import "./ux-polish.css";
+import "./telugu-typography.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Community Hub",
