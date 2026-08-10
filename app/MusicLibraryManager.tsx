@@ -5,11 +5,8 @@ import { FormEvent, useEffect, useState } from "react";
 type StoredSong = {
   id: string;
   title: string;
-  teluguTitle?: string;
   artist: string;
   language: "Telugu" | "English / Folk";
-  mood?: string;
-  note?: string;
   fileName: string;
   mimeType: string;
   blob: Blob;
@@ -71,10 +68,7 @@ export default function MusicLibraryManager() {
     const data = new FormData(event.currentTarget);
     const title = String(data.get("title") || "").trim();
     const artist = String(data.get("artist") || "").trim();
-    const teluguTitle = String(data.get("teluguTitle") || "").trim();
     const language = String(data.get("language") || editingSong.language) as StoredSong["language"];
-    const mood = String(data.get("mood") || "").trim();
-    const note = String(data.get("note") || "").trim();
 
     if (!title || !artist) {
       setMessage("Song title and artist are required.");
@@ -85,10 +79,7 @@ export default function MusicLibraryManager() {
       ...editingSong,
       title,
       artist,
-      teluguTitle: teluguTitle || undefined,
       language,
-      mood: mood || undefined,
-      note: note || undefined,
     };
 
     try {
@@ -112,7 +103,7 @@ export default function MusicLibraryManager() {
         <div className="music-library-manager-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}>
           <section className="music-library-manager" role="dialog" aria-modal="true" aria-labelledby="music-manager-title">
             <div className="music-manager-head">
-              <div><span>MY KGM MUSIC</span><h2 id="music-manager-title">Edit uploaded songs</h2><p>Change details without uploading the audio again.</p></div>
+              <div><span>MY KGM MUSIC</span><h2 id="music-manager-title">Edit uploaded songs</h2><p>Change the visible song details without uploading the audio again.</p></div>
               <button onClick={() => setOpen(false)} aria-label="Close music manager">×</button>
             </div>
 
@@ -121,7 +112,7 @@ export default function MusicLibraryManager() {
                 {songs.map((song) => (
                   <button key={song.id} className="music-manager-song" onClick={() => { setEditingId(song.id); setMessage(""); }}>
                     <span className="music-manager-note">♫</span>
-                    <span><strong>{song.title}</strong>{song.teluguTitle && <em>{song.teluguTitle}</em>}<small>{song.artist} · {song.language}</small></span>
+                    <span><strong>{song.title}</strong><small>{song.artist} · {song.language}</small></span>
                     <b>Edit →</b>
                   </button>
                 ))}
@@ -129,14 +120,11 @@ export default function MusicLibraryManager() {
             ) : (
               <form className="music-manager-form" onSubmit={handleSave}>
                 <button type="button" className="music-manager-back" onClick={() => { setEditingId(null); setMessage(""); }}>← All uploads</button>
-                <div className="music-manager-file"><span>Audio file</span><strong>{editingSong.fileName}</strong><small>The audio itself is unchanged.</small></div>
+                <div className="music-manager-file"><span>Audio file</span><strong>{editingSong.fileName}</strong><small>The audio file itself is never replaced by this edit.</small></div>
                 <div className="music-manager-fields">
                   <label>Song title<input name="title" required defaultValue={editingSong.title} /></label>
-                  <label>Telugu title<input name="teluguTitle" defaultValue={editingSong.teluguTitle || ""} placeholder="Optional" /></label>
                   <label>Artist / singer<input name="artist" required defaultValue={editingSong.artist} /></label>
                   <label>Language<select name="language" defaultValue={editingSong.language}><option>Telugu</option><option>English / Folk</option></select></label>
-                  <label>Mood / style<input name="mood" defaultValue={editingSong.mood || ""} placeholder="e.g. Telangana folk · festival" /></label>
-                  <label className="music-manager-wide">Description / notes<textarea name="note" rows={3} defaultValue={editingSong.note || ""} placeholder="Story, occasion, village, instruments, credits…" /></label>
                 </div>
                 <div className="music-manager-actions"><button type="submit">Save changes</button><button type="button" onClick={() => { setEditingId(null); setMessage(""); }}>Cancel</button></div>
                 {message && <p className="music-manager-message">{message}</p>}
