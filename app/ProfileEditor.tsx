@@ -19,6 +19,10 @@ const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 type Role = "Child" | "Teen" | "Adult";
 type Account = { id: string; email: string; nickname: string; role: Role; created_at?: string };
 type UploadItem = KgmAvatarUpload & { uploader?: { id: string }; download_url?: string };
+type CinemaMovie = { id: string; title: string; category?: string; duration_label?: string; source?: string };
+type CinemaPlaylist = { id: string; name: string; movie_ids: string[] };
+type CinemaMe = { liked_ids: string[]; playlists: CinemaPlaylist[]; progress?: Record<string, unknown>; can_curate?: boolean };
+type CinemaProfileState = { liked: CinemaMovie[]; saved: CinemaMovie[] };
 
 async function apiRequest<T>(path: string, init?: RequestInit, token?: string): Promise<T> {
   const headers = new Headers(init?.headers || {});
@@ -94,6 +98,7 @@ export default function ProfileEditor() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [cinema, setCinema] = useState<CinemaProfileState>({ liked: [], saved: [] });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function loadProfile() {
@@ -106,12 +111,19 @@ export default function ProfileEditor() {
     setLoading(true);
     setError("");
     try {
-      const [account, uploadsResult] = await Promise.all([
+      const [account, uploadsResult, cinemaMe, movieResult] = await Promise.all([
         apiRequest<Account>("/api/kgm-chat/auth/me", undefined, token),
         apiRequest<{ items: UploadItem[] }>("/api/kgm-uploads/mine", undefined, token),
+        apiRequest<CinemaMe>("/api/kgm-cinema/me", undefined, token).catch(() => ({ liked_ids: [], playlists: [] } as CinemaMe)),
+        apiRequest<{ items: CinemaMovie[] }>("/api/kgm-cinema/movies?limit=120").catch(() => ({ items: [] })),
       ]);
       const avatars = (uploadsResult.items || []).filter((item) => isKgmAvatarUpload(item) && item.kind === "image");
       const next = buildProfile(account, avatars);
+      const movieMap = new Map((movieResult.items || []).map((movie) => [movie.id, movie]));
+      const liked = (cinemaMe.liked_ids || []).map((id) => movieMap.get(String(id))).filter((movie): movie is CinemaMovie => Boolean(movie));
+      const savedIds = [...new Set((cinemaMe.playlists || []).flatMap((playlist) => playlist.movie_ids || []).map(String))];
+      const savedMovies = savedIds.map((id) => movieMap.get(id)).filter((movie): movie is CinemaMovie => Boolean(movie));
+      setCinema({ liked, saved: savedMovies });
       setAvatarUploads(avatars);
       setProfile(next);
       setNickname(next.nickname);
@@ -138,10 +150,17 @@ export default function ProfileEditor() {
       setOpen(true);
       void loadProfile();
     };
+    const refreshCinema = () => {
+      if (open) void loadProfile();
+    };
     window.addEventListener("kgm-open-profile", handler);
-    return () => window.removeEventListener("kgm-open-profile", handler);
+    window.addEventListener("kgm-cinema-library-changed", refreshCinema);
+    return () => {
+      window.removeEventListener("kgm-open-profile", handler);
+      window.removeEventListener("kgm-cinema-library-changed", refreshCinema);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -259,7 +278,7 @@ export default function ProfileEditor() {
           <div>
             <span>KGM PROFILE LAB</span>
             <strong>Make it yours.</strong>
-            <small>Your nickname, role and avatar travel with your KGM account.</small>
+            <small>Your nickname, role, avatar and Science Cinema library travel with your KGM account.</small>
           </div>
           <button type="button" onClick={() => setOpen(false)} aria-label="Close profile editor">×</button>
         </header>
@@ -281,6 +300,21 @@ export default function ProfileEditor() {
                 <legend>I’m joining as</legend>
                 <div className="kgm-profile-roles">{(["Child", "Teen", "Adult"] as Role[]).map((item) => <label key={item} className={role === item ? "active" : ""}><input type="radio" name="profile-role" value={item} checked={role === item} onChange={() => { setRole(item); setSaved(false); }} /><span>{item === "Child" ? "🛝" : item === "Teen" ? "⚡" : "🌱"}</span><strong>{item}</strong></label>)}</div>
               </fieldset>
+            </section>
+
+            <section className="kgm-profile-cinema">
+              <div className="kgm-profile-cinema-head">
+                <div><span>SCIENCE CINEMA</span><h3>Your curiosity shelf.</h3></div>
+                <button type="button" onClick={() => { setOpen(false); window.dispatchEvent(new Event("kgm-open-cinema")); }}>Open Cinema →</button>
+              </div>
+              <div className="kgm-profile-cinema-stats">
+                <article><strong>♥ {cinema.liked.length}</strong><span>Liked films</span></article>
+                <article><strong>＋ {cinema.saved.length}</strong><span>My STEM List</span></article>
+              </div>
+              <div className="kgm-profile-cinema-groups">
+                <div><b>♥ LIKED SCIENCE FILMS</b>{cinema.liked.length ? <div className="kgm-profile-film-chips">{cinema.liked.slice(0, 8).map((movie) => <span key={`liked-${movie.id}`} title={movie.title}>{movie.title}</span>)}</div> : <p>Like a Science Cinema film and it will appear here.</p>}</div>
+                <div><b>＋ MY STEM LIST</b>{cinema.saved.length ? <div className="kgm-profile-film-chips">{cinema.saved.slice(0, 8).map((movie) => <span key={`saved-${movie.id}`} title={movie.title}>{movie.title}</span>)}</div> : <p>Save a film to My List and it will appear here.</p>}</div>
+              </div>
             </section>
 
             <section className="kgm-avatar-lab">
