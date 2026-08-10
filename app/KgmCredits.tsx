@@ -1,25 +1,105 @@
-export default function KgmCredits() {
-  const cofounders = [
-    "Devarakonda Chinna",
-    "Gunda Sandeep",
-    "Marthi Jashwanth",
-  ];
+"use client";
 
-  return (
-    <section className="kgm-credits" aria-label="KGM co-founders">
-      <div className="kgm-credits-copy">
-        <span>KGM · KORATLAGUDEM COMMUNITY</span>
-        <strong>Built together in our village.</strong>
-        <p>Apps, music, gallery and community spaces made for Koratlagudem.</p>
-      </div>
-      <div className="kgm-cofounders">
-        <small>CO-FOUNDERS</small>
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+
+const cofounders = [
+  { name: "Devarakonda Chinna", initials: "DC" },
+  { name: "Gunda Sandeep", initials: "GS" },
+  { name: "Marthi Jashwanth", initials: "MJ" },
+];
+
+export default function KgmCredits() {
+  const [spotlightHost, setSpotlightHost] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let attempts = 0;
+    let timer = 0;
+
+    const mountSpotlight = () => {
+      if (cancelled) return;
+
+      const heroGrid = document.querySelector(".yv-hero-grid");
+      if (!heroGrid) {
+        attempts += 1;
+        if (attempts < 120) timer = window.setTimeout(mountSpotlight, 50);
+        return;
+      }
+
+      const current = document.getElementById("kgm-founder-spotlight-root");
+      if (current) {
+        setSpotlightHost(current);
+        return;
+      }
+
+      const host = document.createElement("div");
+      host.id = "kgm-founder-spotlight-root";
+      heroGrid.insertAdjacentElement("afterend", host);
+      setSpotlightHost(host);
+    };
+
+    mountSpotlight();
+
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+      document.getElementById("kgm-founder-spotlight-root")?.remove();
+    };
+  }, []);
+
+  const founderSpotlight = (
+    <section className="kgm-founder-spotlight" aria-label="KGM founding crew">
+      <div className="kgm-founder-intro">
         <div>
-          {cofounders.map((name) => (
-            <span key={name}>{name}</span>
-          ))}
+          <span className="kgm-founder-eyebrow">✦ THE PEOPLE WHO STARTED IT</span>
+          <h2>Small village. Bold builders. A digital future made from here.</h2>
         </div>
+        <p>
+          KGM began with a simple belief: <strong>our village should not only consume technology — we should create it.</strong>
+          These are the co-founders helping turn that belief into a community playground for learning, making and sharing.
+        </p>
+      </div>
+
+      <div className="kgm-founder-grid">
+        {cofounders.map((founder) => (
+          <article className="kgm-founder-card" key={founder.name}>
+            <div className="kgm-founder-avatar" aria-hidden="true">{founder.initials}</div>
+            <div>
+              <small>KGM CO-FOUNDER</small>
+              <strong>{founder.name}</strong>
+              <span>FOUNDING CREW · KORATLAGUDEM</span>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div className="kgm-founder-manifesto">
+        <strong>Three co-founders. One village. One shared belief that local talent deserves a global stage.</strong>
+        <span className="kgm-founder-arrow">KORATLAGUDEM → EVERYWHERE</span>
       </div>
     </section>
+  );
+
+  return (
+    <>
+      {spotlightHost ? createPortal(founderSpotlight, spotlightHost) : null}
+
+      <section className="kgm-credits" aria-label="KGM co-founders">
+        <div className="kgm-credits-copy">
+          <span>KGM · KORATLAGUDEM COMMUNITY</span>
+          <strong>KGM began here.</strong>
+          <p>Built with curiosity, courage and community — so our village can create, learn and share on its own terms.</p>
+        </div>
+        <div className="kgm-cofounders">
+          <small>FOUNDING CREW</small>
+          <div>
+            {cofounders.map((founder) => (
+              <span key={founder.name}>{founder.name}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
