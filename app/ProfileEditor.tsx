@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import KgmAvatar, { KGM_AVATAR_PRESETS, type KgmProfile } from "./KgmAvatar";
 
-const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
+const PROFILE_API = (process.env.NEXT_PUBLIC_KGM_PROFILE_API || "https://kgm-profile-api.onrender.com").replace(/\/$/, "");
 const TOKEN_KEY = "kgm-village-chat-token-v2";
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
@@ -13,7 +13,7 @@ async function apiRequest<T>(path: string, init?: RequestInit, token?: string): 
   const headers = new Headers(init?.headers || {});
   if (token) headers.set("Authorization", `Bearer ${token}`);
   if (init?.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
-  const response = await fetch(`${API}${path}`, { ...init, headers });
+  const response = await fetch(`${PROFILE_API}${path}`, { ...init, headers });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(typeof data?.detail === "string" ? data.detail : "Could not update your KGM profile");
   return data as T;
@@ -106,7 +106,7 @@ export default function ProfileEditor() {
       setError("Avatar images must be 5 MB or smaller.");
       return;
     }
-    if (!(["image/jpeg", "image/png", "image/webp", "image/gif"].includes(next.type))) {
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(next.type)) {
       setError("Use a JPG, PNG, WebP or GIF avatar.");
       return;
     }
@@ -158,11 +158,9 @@ export default function ProfileEditor() {
 
   if (!open) return null;
 
-  const previewAvatar = preview
-    ? { type: "upload" as const, url: preview }
-    : selectedPreset
-      ? { type: "preset" as const, preset: selectedPreset }
-      : profile?.avatar;
+  const previewAvatar = selectedPreset
+    ? { type: "preset" as const, preset: selectedPreset }
+    : profile?.avatar;
 
   return (
     <div className="kgm-profile-backdrop" role="presentation" onMouseDown={(event) => {
@@ -206,7 +204,7 @@ export default function ProfileEditor() {
                   <strong>{item.name}</strong><small>{item.vibe}</small>
                 </button>)}
               </div>
-              <div className="kgm-avatar-upload-note"><span>UPLOAD</span><p>JPG · PNG · WebP · GIF · max 5 MB. Your uploaded avatar is stored securely with your KGM account on the backend.</p></div>
+              <div className="kgm-avatar-upload-note"><span>UPLOAD</span><p>JPG · PNG · WebP · GIF · max 5 MB. Uploaded avatars are stored server-side with your KGM profile, not in browser storage.</p></div>
             </section>
 
             {error && <p className="kgm-profile-error">{error}</p>}
