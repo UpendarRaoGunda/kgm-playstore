@@ -18,6 +18,7 @@ import "./ux-polish.css";
 import "./telugu-typography.css";
 import "./free-knowledge-mission.css";
 import "./youthverse.css";
+import "./youthverse-polish.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Youthverse",
