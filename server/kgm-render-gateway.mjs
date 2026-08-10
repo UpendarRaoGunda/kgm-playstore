@@ -86,7 +86,7 @@ async function handle(req, res) {
   if (url.pathname.startsWith("/api/kgm-")) return upstreamProxy(req,res);
   return appProxy(req,res);
 }
-function appProxy(req,res){const target=http.request({hostname:"127.0.0.1",port:APP_PORT,path:req.url,method:req.method,headers:{...req.headers,host:`127.0.0.1:${APP_PORT}`}},r=>{res.writeHead(r.statusCode||502,r.headers);r.pipe(res);});target.on("error",e=>json(res,502,{detail:`KGM app unavailable: ${e.message}`}));req.pipe(target);}
+function appProxy(req,res){const target=http.request({hostname:"127.0.0.1",port:APP_PORT,path:req.url,method:req.method,headers:{...req.headers,host:req.headers.host || "kgm-playstore.onrender.com"}},r=>{res.writeHead(r.statusCode||502,r.headers);r.pipe(res);});target.on("error",e=>json(res,502,{detail:`KGM app unavailable: ${e.message}`}));req.pipe(target);}
 function upstreamProxy(req,res){const u=new URL(UPSTREAM);const client=u.protocol==="https:"?https:http;const target=client.request({hostname:u.hostname,port:u.port||undefined,path:req.url,method:req.method,headers:{...req.headers,host:u.host}},r=>{res.writeHead(r.statusCode||502,r.headers);r.pipe(res);});target.on("error",e=>json(res,502,{detail:`KGM API unavailable: ${e.message}`}));req.pipe(target);}
 
 const vinextBin=join(process.cwd(),"node_modules",".bin","vinext");
