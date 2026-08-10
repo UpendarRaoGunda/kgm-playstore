@@ -1,32 +1,95 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import KgmAvatar, { KGM_AVATAR_PRESETS, type KgmProfile } from "./KgmAvatar";
+import KgmAvatar, {
+  KGM_AVATAR_PRESETS,
+  KGM_AVATAR_PRESET_PREFIX,
+  KGM_AVATAR_UPLOAD_TITLE,
+  avatarFromUploads,
+  getAvatarPreset,
+  isKgmAvatarUpload,
+  type KgmAvatarUpload,
+  type KgmProfile,
+} from "./KgmAvatar";
 
-const PROFILE_API = (process.env.NEXT_PUBLIC_KGM_PROFILE_API || "https://kgm-profile-api.onrender.com").replace(/\/$/, "");
+const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
 const TOKEN_KEY = "kgm-village-chat-token-v2";
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
 type Role = "Child" | "Teen" | "Adult";
+type Account = { id: string; email: string; nickname: string; role: Role; created_at?: string };
+type UploadItem = KgmAvatarUpload & { uploader?: { id: string }; download_url?: string };
 
 async function apiRequest<T>(path: string, init?: RequestInit, token?: string): Promise<T> {
   const headers = new Headers(init?.headers || {});
   if (token) headers.set("Authorization", `Bearer ${token}`);
   if (init?.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
-  const response = await fetch(`${PROFILE_API}${path}`, { ...init, headers });
+  const response = await fetch(`${API}${path}`, { ...init, headers });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(typeof data?.detail === "string" ? data.detail : "Could not update your KGM profile");
   return data as T;
 }
 
+function buildProfile(account: Account, uploads: UploadItem[]): KgmProfile {
+  return {
+    id: account.id,
+    email: account.email,
+    nickname: account.nickname,
+    role: account.role,
+    created_at: account.created_at,
+    avatar: avatarFromUploads(uploads),
+  };
+}
+
+async function presetPng(id: string): Promise<File> {
+  const preset = getAvatarPreset(id);
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("This browser cannot create avatar images.");
+
+  const gradient = ctx.createLinearGradient(44, 24, 470, 490);
+  gradient.addColorStop(0, preset.colors[0]);
+  gradient.addColorStop(1, preset.colors[1]);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 512, 512);
+
+  ctx.globalAlpha = .18;
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath(); ctx.arc(120, 90, 78, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(440, 410, 140, 0, Math.PI * 2); ctx.fill();
+  ctx.globalAlpha = 1;
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "230px system-ui, Apple Color Emoji, Segoe UI Emoji, sans-serif";
+  ctx.fillText(preset.emoji, 256, 238);
+
+  ctx.fillStyle = "rgba(8,8,13,.78)";
+  ctx.fillRect(0, 428, 512, 84);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 32px system-ui, sans-serif";
+  ctx.fillText("KGM", 256, 466);
+  ctx.fillStyle = "#d8ff3e";
+  ctx.beginPath(); ctx.arc(465, 465, 12, 0, Math.PI * 2); ctx.fill();
+
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((value) => value ? resolve(value) : reject(new Error("Could not create avatar image.")), "image/png");
+  });
+  return new File([blob], `kgm-avatar-${id}.png`, { type: "image/png" });
+}
+
 export default function ProfileEditor() {
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState<KgmProfile | null>(null);
+  const [avatarUploads, setAvatarUploads] = useState<UploadItem[]>([]);
   const [nickname, setNickname] = useState("");
   const [role, setRole] = useState<Role>("Adult");
   const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
+  const [avatarDirty, setAvatarDirty] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -43,13 +106,21 @@ export default function ProfileEditor() {
     setLoading(true);
     setError("");
     try {
-      const next = await apiRequest<KgmProfile>("/api/kgm-profile/me", undefined, token);
+      const [account, uploadsResult] = await Promise.all([
+        apiRequest<Account>("/api/kgm-chat/auth/me", undefined, token),
+        apiRequest<{ items: UploadItem[] }>("/api/kgm-uploads/mine", undefined, token),
+      ]);
+      const avatars = (uploadsResult.items || []).filter((item) => isKgmAvatarUpload(item) && item.kind === "image");
+      const next = buildProfile(account, avatars);
+      setAvatarUploads(avatars);
       setProfile(next);
       setNickname(next.nickname);
       setRole(next.role);
-      setSelectedPreset(next.avatar.type === "preset" ? next.avatar.preset || "orbit-pop" : null);
+      setSelectedPreset(next.avatar.preset || null);
       setFile(null);
+      if (preview) URL.revokeObjectURL(preview);
       setPreview("");
+      setAvatarDirty(false);
       setSaved(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load your profile");
@@ -69,6 +140,7 @@ export default function ProfileEditor() {
     };
     window.addEventListener("kgm-open-profile", handler);
     return () => window.removeEventListener("kgm-open-profile", handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -96,6 +168,7 @@ export default function ProfileEditor() {
     setPreview("");
     setFile(null);
     setSelectedPreset(id);
+    setAvatarDirty(true);
     setSaved(false);
     setError("");
   }
@@ -114,8 +187,18 @@ export default function ProfileEditor() {
     setPreview(URL.createObjectURL(next));
     setFile(next);
     setSelectedPreset(null);
+    setAvatarDirty(true);
     setSaved(false);
     setError("");
+  }
+
+  async function uploadAvatar(token: string, avatarFile: File, description: string): Promise<UploadItem> {
+    const form = new FormData();
+    form.set("title", KGM_AVATAR_UPLOAD_TITLE);
+    form.set("description", description);
+    form.set("rights_confirmed", "true");
+    form.set("file", avatarFile);
+    return apiRequest<UploadItem>("/api/kgm-uploads", { method: "POST", body: form }, token);
   }
 
   async function saveProfile(event: FormEvent<HTMLFormElement>) {
@@ -127,26 +210,31 @@ export default function ProfileEditor() {
     setError("");
     setSaved(false);
     try {
-      const payload: Record<string, string> = { nickname: nickname.trim(), role };
-      if (selectedPreset) payload.avatar_preset = selectedPreset;
-      let next = await apiRequest<KgmProfile>("/api/kgm-profile/me", {
+      const account = await apiRequest<Account>("/api/kgm-chat/auth/me", {
         method: "PUT",
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ nickname: nickname.trim(), role }),
       }, token);
 
-      if (file) {
-        const form = new FormData();
-        form.append("file", file);
-        next = await apiRequest<KgmProfile>("/api/kgm-profile/me/avatar", { method: "POST", body: form }, token);
+      let avatars = avatarUploads;
+      if (avatarDirty) {
+        const avatarFile = file || await presetPng(selectedPreset || "orbit-pop");
+        const description = file ? "KGM avatar custom upload" : `${KGM_AVATAR_PRESET_PREFIX} ${selectedPreset || "orbit-pop"}`;
+        const uploaded = await uploadAvatar(token, avatarFile, description);
+        const old = avatars.filter((item) => item.id !== uploaded.id);
+        await Promise.allSettled(old.map((item) => apiRequest(`/api/kgm-uploads/${item.id}`, { method: "DELETE" }, token)));
+        avatars = [uploaded];
+        setAvatarUploads(avatars);
       }
 
+      const next = buildProfile(account, avatars);
       setProfile(next);
       setNickname(next.nickname);
       setRole(next.role);
-      setSelectedPreset(next.avatar.type === "preset" ? next.avatar.preset || "orbit-pop" : null);
+      setSelectedPreset(next.avatar.preset || null);
       setFile(null);
       if (preview) URL.revokeObjectURL(preview);
       setPreview("");
+      setAvatarDirty(false);
       setSaved(true);
       window.dispatchEvent(new CustomEvent("kgm-profile-updated", { detail: next }));
     } catch (err) {
@@ -204,7 +292,7 @@ export default function ProfileEditor() {
                   <strong>{item.name}</strong><small>{item.vibe}</small>
                 </button>)}
               </div>
-              <div className="kgm-avatar-upload-note"><span>UPLOAD</span><p>JPG · PNG · WebP · GIF · max 5 MB. Uploaded avatars are stored server-side with your KGM profile, not in browser storage.</p></div>
+              <div className="kgm-avatar-upload-note"><span>BACKEND</span><p>JPG · PNG · WebP · GIF · max 5 MB. Custom images and KGM preset choices are saved through the existing authenticated KGM backend/GridFS storage. Upload only images you own or may use.</p></div>
             </section>
 
             {error && <p className="kgm-profile-error">{error}</p>}
