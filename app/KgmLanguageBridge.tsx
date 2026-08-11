@@ -55,6 +55,11 @@ function translateTextNode(node: Text, lang: KgmLanguage) {
     ORIGINAL_TEXT.set(node, original);
   }
 
+  const parent = node.parentElement;
+  if (parent?.tagName === "OPTION" && !parent.hasAttribute("value")) {
+    parent.setAttribute("value", original.trim());
+  }
+
   const core = original.trim();
   const translated = lang === "te" ? translateUi(core) : core;
   const next = keepWhitespace(original, translated);
