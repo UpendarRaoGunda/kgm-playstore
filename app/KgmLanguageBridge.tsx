@@ -53,7 +53,7 @@ const te: Dict = {
   "▶ Watch inside KGM": "▶ KGMలో చూడండి",
   "＋ My List": "＋ నా జాబితా",
   "✓ In My List": "✓ నా జాబితాలో ఉంది",
-  "KGM · OPEN KNOWLEDGE": "KGM · అందరికీ జ్ఞానం",
+  "KGM · VILLAGE-BORN · WORLD-BOUND": "KGM · మన ఊరి నుంచి ప్రపంచానికి",
   "Knowledge should be free for everyone.": "జ్ఞానం అందరికీ ఉచితంగా ఉండాలి.",
 };
 
