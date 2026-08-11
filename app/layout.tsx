@@ -16,12 +16,14 @@ import YouthHeroShowcase from "./YouthHeroShowcase";
 import YouthTopHeader from "./YouthTopHeader";
 import KgmLanguageBridge from "./KgmLanguageBridge";
 import CinemaCategoryScroller from "./CinemaCategoryScroller";
+import KgmVideoThumbnailEnhancer from "./KgmVideoThumbnailEnhancer";
 import "./globals.css";
 import "./music.css";
 import "./music-library-manager.css";
 import "./community-gallery.css";
 import "./community-gallery-edit.css";
 import "./community-shelf.css";
+import "./kgm-video-thumbnail.css";
 import "./village-chat.css";
 import "./mobile-fixes.css";
 import "./design-system.css";
@@ -90,6 +92,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <KgmCredits />
         <MusicLibraryManager />
         <CommunityGallery />
+        <KgmVideoThumbnailEnhancer />
         <VillageChat />
         <ScienceCinema />
         <ScienceCinemaDrive />
