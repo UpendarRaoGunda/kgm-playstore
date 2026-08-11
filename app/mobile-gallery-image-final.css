@@ -1,0 +1,47 @@
+/* Final mobile photo sizing override. Keeps gallery/community photos at their natural aspect ratio and prevents empty media-space gaps. */
+@media (max-width: 620px) {
+  .kgm-upload-card.image .kgm-upload-media {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    line-height: 0 !important;
+    overflow: hidden !important;
+    background: #0d0f17 !important;
+  }
+
+  .kgm-upload-card.image .kgm-upload-media img {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    image-orientation: from-image;
+  }
+
+  .kgm-community-card.image .kgm-community-media,
+  .kgm-community-card[data-kind="image"] .kgm-community-media {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    line-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .kgm-community-card.image .kgm-community-media img,
+  .kgm-community-card[data-kind="image"] .kgm-community-media img {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    image-orientation: from-image;
+  }
+}
