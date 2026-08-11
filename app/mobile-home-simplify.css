@@ -17,6 +17,9 @@
 .yv-happening-card small{font-size:8px;letter-spacing:.14em;font-weight:950;color:#a99fb9}.yv-happening-card strong{font-size:18px;line-height:1.1;margin-top:7px;max-width:250px}.yv-happening-card p{margin:6px 0 11px;font-size:9px;color:#8f899d}.yv-happening-card b{font-size:9px;letter-spacing:.08em;color:#d8ff3e}
 
 @media(max-width:760px){
+  /* Keep the village mission visible: short, powerful, one-line on phones. */
+  .kgm-free-mission{display:block!important}
+
   /* One hierarchy: header = identity, page = discovery, dock = navigation. */
   .yv-shell-simplified{padding:16px 18px 96px!important;overflow-x:hidden}
   .yv-shell-simplified .yv-topline{margin:0 auto 18px}
