@@ -107,9 +107,7 @@
   border:1px solid rgba(16,18,11,.10);
   font-size:12px;
 }
-.kgm-mission-te{display:none!important}
-.kgm-lang-te .kgm-mission-en{display:none!important}
-.kgm-lang-te .kgm-mission-te{display:inline!important}
+.kgm-mission-mobile{display:none!important}
 .kgm-lang-te .kgm-free-mission-badge,
 .kgm-lang-te .kgm-free-mission-copy strong{
   font-family:var(--kgm-telugu-font,"Noto Sans Telugu","Nirmala UI",system-ui,sans-serif);
@@ -137,84 +135,82 @@
   }
   .kgm-free-mission:after{background:repeating-linear-gradient(90deg,rgba(17,18,13,.018) 0 1px,transparent 1px 34px)}
   .kgm-free-mission-inner{
-    min-height:40px!important;
+    min-height:42px!important;
     height:auto!important;
     padding:6px 10px!important;
     display:grid!important;
-    grid-template-columns:minmax(0,auto) minmax(0,1fr)!important;
+    grid-template-columns:auto minmax(0,1fr)!important;
     align-items:center!important;
     gap:9px!important;
-    overflow:hidden!important;
+    overflow:visible!important;
   }
+  .kgm-mission-desktop{display:none!important}
+  .kgm-mission-mobile{display:inline!important}
   .kgm-free-mission-badge{
-    max-width:47vw;
-    min-height:26px!important;
-    padding:5px 9px!important;
-    overflow:hidden;
-    text-overflow:ellipsis;
+    max-width:none!important;
+    min-height:27px!important;
+    padding:5px 10px!important;
+    overflow:visible!important;
     border-radius:999px!important;
     background:#10120b!important;
     color:#d8ff3e!important;
     border:0!important;
     box-shadow:0 5px 14px rgba(10,12,8,.14)!important;
-    font-size:7.4px!important;
-    letter-spacing:.055em!important;
+    font-size:8px!important;
+    letter-spacing:.07em!important;
     line-height:1!important;
-    flex:0 0 auto!important;
     white-space:nowrap!important;
   }
   .kgm-free-mission-copy{
     min-width:0!important;
-    overflow:hidden!important;
+    overflow:visible!important;
   }
   .kgm-free-mission-copy strong{
     display:block!important;
-    width:100%;
+    width:auto!important;
     margin:0!important;
     color:#111!important;
-    font-size:10.5px!important;
-    line-height:1.15!important;
-    font-weight:950!important;
+    font-size:10.8px!important;
+    line-height:1.12!important;
+    font-weight:1000!important;
     white-space:nowrap!important;
-    overflow:hidden!important;
-    text-overflow:ellipsis!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    letter-spacing:.015em!important;
   }
   .kgm-free-mission-signal{display:none!important}
   .kgm-lang-te .kgm-free-mission-badge{
-    max-width:52vw;
-    font-size:8.6px!important;
+    font-size:9px!important;
     line-height:1.2!important;
   }
   .kgm-lang-te .kgm-free-mission-copy strong{
-    font-size:11.2px!important;
-    line-height:1.28!important;
+    font-size:11.5px!important;
+    line-height:1.25!important;
+    letter-spacing:0!important;
   }
 }
 
 @media(max-width:430px){
   .kgm-free-mission-inner{
-    min-height:38px!important;
+    min-height:40px!important;
     padding:5px 8px!important;
     gap:7px!important;
   }
   .kgm-free-mission-badge{
-    max-width:48vw;
-    min-height:25px!important;
+    min-height:26px!important;
     padding:5px 8px!important;
-    font-size:6.8px!important;
+    font-size:7.2px!important;
   }
   .kgm-free-mission-copy strong{font-size:9.8px!important}
-  .kgm-lang-te .kgm-free-mission-badge{
-    max-width:54vw;
-    font-size:8px!important;
-  }
-  .kgm-lang-te .kgm-free-mission-copy strong{font-size:10.5px!important}
+  .kgm-lang-te .kgm-free-mission-badge{font-size:8.3px!important}
+  .kgm-lang-te .kgm-free-mission-copy strong{font-size:10.7px!important}
 }
 
 @media(max-width:360px){
-  .kgm-free-mission-badge{max-width:50vw;font-size:6.2px!important;padding-inline:7px!important}
-  .kgm-free-mission-copy strong{font-size:9px!important}
-  .kgm-lang-te .kgm-free-mission-badge{max-width:57vw;font-size:7.4px!important}
+  .kgm-free-mission-inner{gap:6px!important;padding-inline:7px!important}
+  .kgm-free-mission-badge{font-size:6.6px!important;padding-inline:7px!important}
+  .kgm-free-mission-copy strong{font-size:8.9px!important}
+  .kgm-lang-te .kgm-free-mission-badge{font-size:7.7px!important}
   .kgm-lang-te .kgm-free-mission-copy strong{font-size:9.8px!important}
 }
 
