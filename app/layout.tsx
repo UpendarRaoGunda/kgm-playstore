@@ -17,6 +17,7 @@ import YouthTopHeader from "./YouthTopHeader";
 import KgmLanguageBridge from "./KgmLanguageBridge";
 import CinemaCategoryScroller from "./CinemaCategoryScroller";
 import KgmVideoThumbnailEnhancer from "./KgmVideoThumbnailEnhancer";
+import KgmVideoChat from "./KgmVideoChat";
 import "./globals.css";
 import "./music.css";
 import "./music-library-manager.css";
@@ -46,7 +47,8 @@ import "./hero-cinema-polish.css";
 import "./mobile-home-simplify.css";
 import "./youth-hero-showcase.css";
 import "./mobile-mission-final.css";
-import "./gallery-mobile-image-final.css";
+import "./mobile-gallery-image-final.css";
+import "./kgm-video-chat.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Youthverse",
@@ -95,6 +97,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <CommunityGallery />
         <KgmVideoThumbnailEnhancer />
         <VillageChat />
+        <KgmVideoChat />
         <ScienceCinema />
         <ScienceCinemaDrive />
         <CinemaLegalMovies />
