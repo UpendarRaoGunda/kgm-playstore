@@ -12,7 +12,6 @@ import KgmCredits from "./KgmCredits";
 import FreeKnowledgeMission from "./FreeKnowledgeMission";
 import PwaManager from "./PwaInstall";
 import YouthverseExperience from "./YouthverseExperience";
-import YouthHeroShowcase from "./YouthHeroShowcase";
 import YouthTopHeader from "./YouthTopHeader";
 import KgmLanguageBridge from "./KgmLanguageBridge";
 import CinemaCategoryScroller from "./CinemaCategoryScroller";
@@ -44,16 +43,15 @@ import "./profile-avatar.css";
 import "./profile-cinema.css";
 import "./profile-logout.css";
 import "./hero-cinema-polish.css";
-import "./mobile-home-simplify.css";
-import "./youth-hero-showcase.css";
 import "./mobile-mission-final.css";
 import "./mobile-gallery-image-final.css";
 import "./kgm-video-chat.css";
 import "./village-chat-genz.css";
+import "./home-v2.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Youthverse",
-  description: "Koratlagudem's digital playground for community apps, science cinema, music, photos, videos, creators and Village Chat — free for everyone.",
+  description: "Koratlagudem's digital youth network for community apps, science cinema, music, photos, videos, creators and live conversation — free for everyone.",
   applicationName: "KGM Youthverse",
   appleWebApp: {
     capable: true,
@@ -85,13 +83,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en-IN">
       <body>
-        <a className="kgm-skip-link" href="#apps">Skip to community shelf</a>
+        <a className="kgm-skip-link" href="#kgm-live-drops">Skip to what's happening</a>
         <FreeKnowledgeMission />
         <KgmLanguageBridge />
         <YouthTopHeader />
         {children}
         <YouthverseExperience />
-        <YouthHeroShowcase />
         <CommunityShelf />
         <KgmCredits />
         <MusicLibraryManager />
