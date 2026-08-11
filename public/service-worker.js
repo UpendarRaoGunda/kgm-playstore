@@ -1,4 +1,4 @@
-const VERSION = "kgm-pwa-v6";
+const VERSION = "kgm-pwa-v7";
 const SHELL_CACHE = `${VERSION}-shell`;
 const ASSET_CACHE = `${VERSION}-assets`;
 const APP_SHELL = [
