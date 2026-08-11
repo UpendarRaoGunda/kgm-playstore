@@ -1,0 +1,67 @@
+@media (max-width: 760px) {
+  /* Final mobile image sizing: image cards must collapse exactly to the photo. */
+  .kgm-upload-card.image .kgm-upload-media {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    overflow: hidden !important;
+    line-height: 0 !important;
+    flex: 0 0 auto !important;
+    place-items: initial !important;
+    background: #0d0f17 !important;
+  }
+
+  .kgm-upload-card.image .kgm-upload-media > img {
+    display: block !important;
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    image-orientation: from-image;
+    vertical-align: top !important;
+  }
+
+  /* The Community Shelf uses a fixed media height for video/audio/APK cards,
+     but photos should also follow their own aspect ratio on phones. */
+  .kgm-live-card.image .kgm-live-media {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    overflow: hidden !important;
+    line-height: 0 !important;
+    flex: 0 0 auto !important;
+    background: #0d0f17 !important;
+  }
+
+  .kgm-live-card.image .kgm-live-media > img,
+  .kgm-live-card.image .kgm-live-media > a,
+  .kgm-live-card.image .kgm-live-media > a > img {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    image-orientation: from-image;
+    vertical-align: top !important;
+  }
+
+  .kgm-live-card.image .kgm-live-media > a {
+    line-height: 0 !important;
+  }
+}
