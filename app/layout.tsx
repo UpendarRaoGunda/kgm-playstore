@@ -49,6 +49,7 @@ import "./youth-hero-showcase.css";
 import "./mobile-mission-final.css";
 import "./mobile-gallery-image-final.css";
 import "./kgm-video-chat.css";
+import "./village-chat-genz.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Youthverse",
