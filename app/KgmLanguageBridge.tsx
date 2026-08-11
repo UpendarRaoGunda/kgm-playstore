@@ -53,6 +53,8 @@ const te: Dict = {
   "▶ Watch inside KGM": "▶ KGMలో చూడండి",
   "＋ My List": "＋ నా జాబితా",
   "✓ In My List": "✓ నా జాబితాలో ఉంది",
+  "KGM · OPEN KNOWLEDGE": "KGM · అందరికీ జ్ఞానం",
+  "Knowledge should be free for everyone.": "జ్ఞానం అందరికీ ఉచితంగా ఉండాలి.",
 };
 
 const selectors = [
@@ -73,6 +75,8 @@ const selectors = [
   ".kgm-cinema-learning-kicker",
   ".kgm-cinema-learning-panel h3",
   ".kgm-cinema-learning-panel h4",
+  ".kgm-free-mission-badge",
+  ".kgm-free-mission-copy strong",
 ].join(",");
 
 function setText(node: HTMLElement, value: string) {
