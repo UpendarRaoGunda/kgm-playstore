@@ -92,6 +92,8 @@ export default function CommunityGallery() {
   const [account, setAccount] = useState<Account | null>(null);
   const [reported, setReported] = useState<Set<string>>(new Set());
   const [selectedUpload, setSelectedUpload] = useState<SelectedUpload | null>(null);
+  const [editingItem, setEditingItem] = useState<UploadItem | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   useEffect(() => setNavHost(document.querySelector(".nav-links")), []);
   useEffect(() => () => {
@@ -215,12 +217,50 @@ export default function CommunityGallery() {
     }
   }
 
+  function openEdit(item: UploadItem) {
+    if (account?.id !== item.uploader.id) return;
+    setError("");
+    setEditingItem(item);
+  }
+
+  async function handleEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingItem || savingEdit) return;
+    const token = localStorage.getItem(TOKEN_KEY) || "";
+    if (!token || account?.id !== editingItem.uploader.id) {
+      setError("Sign in with the account that uploaded this item to edit it.");
+      return;
+    }
+    const data = new FormData(event.currentTarget);
+    const title = String(data.get("title") || "").trim();
+    const description = String(data.get("description") || "").trim();
+    if (!title) {
+      setError("Add a title before saving.");
+      return;
+    }
+    setSavingEdit(true);
+    setError("");
+    try {
+      const updated = await json<UploadItem>(`${API}/api/kgm-uploads/${editingItem.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ title, description }),
+      }, token);
+      setItems((current) => current.map((entry) => entry.id === updated.id ? updated : entry));
+      setEditingItem(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save changes");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
   async function deleteItem(item: UploadItem) {
     const token = localStorage.getItem(TOKEN_KEY) || "";
     if (!token || account?.id !== item.uploader.id) return;
     try {
       await json(`${API}/api/kgm-uploads/${item.id}`, { method: "DELETE" }, token);
       setItems((current) => current.filter((entry) => entry.id !== item.id));
+      if (editingItem?.id === item.id) setEditingItem(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not delete upload");
     }
@@ -276,7 +316,7 @@ export default function CommunityGallery() {
           <form onSubmit={submitSearch}><input value={query} onChange={(event) => setQuery(event.target.value)} maxLength={80} placeholder="Search village uploads…" /><button>Search</button></form>
         </div>
 
-        <div className="kgm-gallery-public-note"><span>🌍</span><p><strong>Public by design.</strong> Anyone can browse and enjoy these uploads without signing in. Uploading, deleting and reporting use KGM accounts.</p></div>
+        <div className="kgm-gallery-public-note"><span>🌍</span><p><strong>Public by design.</strong> Anyone can browse and enjoy these uploads without signing in. Uploading, editing, deleting and reporting use KGM accounts.</p></div>
         {error && <p className="kgm-gallery-error">{error}</p>}
 
         <div className="kgm-gallery-grid">
@@ -295,9 +335,9 @@ export default function CommunityGallery() {
               {item.description && <p>{item.description}</p>}
               <div className="kgm-upload-by"><span>{item.uploader.nickname.slice(0, 1).toUpperCase()}</span><div><strong>{item.uploader.nickname}</strong><small>{item.uploader.role} · {dateLabel(item.created_at)}</small></div></div>
               {item.kind === "apk" && <div className="kgm-apk-warning"><strong>⚠ Unverified community APK</strong><span>SHA-256: {item.sha256.slice(0, 16)}…</span><small>Install only if you trust the uploader. KGM does not auto-install community APKs.</small></div>}
-              <div className="kgm-upload-actions">
+              <div className={`kgm-upload-actions ${account?.id === item.uploader.id ? "owner-actions" : ""}`}>
                 {item.kind === "apk" ? <a href={absolute(item.download_url)} download>Download APK</a> : <a href={absolute(item.download_url)} download>Save file</a>}
-                {account?.id === item.uploader.id ? <button onClick={() => deleteItem(item)}>Delete</button> : <button disabled={reported.has(item.id)} onClick={() => reportItem(item)}>{reported.has(item.id) ? "Reported ✓" : "Report"}</button>}
+                {account?.id === item.uploader.id ? <><button className="kgm-edit-upload" onClick={() => openEdit(item)}>Edit</button><button className="kgm-delete-upload" onClick={() => deleteItem(item)}>Delete</button></> : <button disabled={reported.has(item.id)} onClick={() => reportItem(item)}>{reported.has(item.id) ? "Reported ✓" : "Report"}</button>}
               </div>
             </div>
           </article>)}
@@ -338,6 +378,21 @@ export default function CommunityGallery() {
           <label className="kgm-upload-rights"><input name="rights_confirmed" type="checkbox" required disabled={!account} /><span>I own this file or have permission to share it, and it is suitable for a public village gallery used by children and adults.</span></label>
           <div className="kgm-upload-policy"><strong>Public upload</strong><p>Your nickname, role and upload will be visible to everyone. Do not upload private photos, personal documents, contact details, harmful content, pirated media or APKs you do not trust.</p></div>
           <button className="kgm-upload-submit" type="submit" disabled={!account || uploading || !selectedUpload}>{uploading ? "Uploading…" : selectedUpload ? `Publish ${selectedUpload.kind} for everyone →` : "Choose a file to continue"}</button>
+        </form>
+      </div>}
+
+      {editingItem && <div className="kgm-upload-modal-backdrop kgm-edit-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setEditingItem(null); }}>
+        <form className="kgm-upload-modal kgm-edit-modal" onSubmit={handleEdit}>
+          <header><div><span>YOUR UPLOAD · EDIT DETAILS</span><h3>Edit what everyone sees</h3></div><button type="button" onClick={() => setEditingItem(null)}>×</button></header>
+          <div className="kgm-edit-preview">
+            <span>{editingItem.kind === "image" ? "▧" : editingItem.kind === "video" ? "▶" : editingItem.kind === "audio" ? "♪" : "APK"}</span>
+            <div><small>{editingItem.kind.toUpperCase()} · {bytes(editingItem.size)}</small><strong>{editingItem.filename}</strong><p>The media file stays unchanged. You can update its public title and description.</p></div>
+          </div>
+          <label>Title<input name="title" required maxLength={100} defaultValue={editingItem.title} autoFocus /></label>
+          <label>Description<textarea name="description" maxLength={500} rows={4} defaultValue={editingItem.description} placeholder="Add or improve the public description" /></label>
+          <div className="kgm-edit-help"><strong>You stay in control.</strong><p>Only the account that uploaded this item can edit or delete it. Changes appear in the public gallery after saving.</p></div>
+          {error && <p className="kgm-gallery-error kgm-edit-error">{error}</p>}
+          <div className="kgm-edit-actions"><button type="button" onClick={() => setEditingItem(null)}>Cancel</button><button className="kgm-edit-save" type="submit" disabled={savingEdit}>{savingEdit ? "Saving…" : "Save changes →"}</button></div>
         </form>
       </div>}
     </div>}
