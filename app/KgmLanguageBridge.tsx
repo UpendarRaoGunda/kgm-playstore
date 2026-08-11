@@ -114,7 +114,7 @@ function applyDocumentLanguage(lang: KgmLanguage) {
 
   const html = document.documentElement;
   if (!html.dataset.kgmOriginalTitle) html.dataset.kgmOriginalTitle = document.title;
-  document.title = lang === "te" ? "KGM · కొరట్లగూడెం యూత్‌వర్స్" : html.dataset.kgmOriginalTitle;
+  document.title = lang === "te" ? "KGM · కొరట్లగూడెం యూత్‌వర్స్" : (html.dataset.kgmOriginalTitle || "KGM · Koratlagudem Youthverse");
 
   if (document.body) translateTree(document.body, lang);
 }
