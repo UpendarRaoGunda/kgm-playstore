@@ -30,21 +30,25 @@ function roomUrl(nickname: string) {
 }
 
 export default function KgmVideoChat() {
-  const [host, setHost] = useState<Element | null>(null);
+  const [navHost, setNavHost] = useState<Element | null>(null);
+  const [chatActionsHost, setChatActionsHost] = useState<Element | null>(null);
   const [open, setOpen] = useState(false);
   const [joined, setJoined] = useState(false);
   const [account, setAccount] = useState<CachedAccount | null>(null);
 
   useEffect(() => {
     let frame = 0;
-    const findHost = () => {
-      const next = document.querySelector(".village-chat-meta-actions");
-      setHost((current) => current === next ? current : next);
+    const findHosts = () => {
+      const nextNav = document.querySelector(".nav-links");
+      const nextActions = document.querySelector(".village-chat-meta-actions");
+      setNavHost((current) => current === nextNav ? current : nextNav);
+      setChatActionsHost((current) => current === nextActions ? current : nextActions);
     };
-    findHost();
+
+    findHosts();
     const observer = new MutationObserver(() => {
       cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(findHost);
+      frame = requestAnimationFrame(findHosts);
     });
     observer.observe(document.body, { childList: true, subtree: true });
     return () => {
@@ -58,13 +62,21 @@ export default function KgmVideoChat() {
     sync();
     window.addEventListener("kgm-auth-state", sync);
     window.addEventListener("kgm-profile-updated", sync);
+    window.addEventListener("kgm-auth-changed", sync);
     window.addEventListener("storage", sync);
     return () => {
       window.removeEventListener("kgm-auth-state", sync);
       window.removeEventListener("kgm-profile-updated", sync);
+      window.removeEventListener("kgm-auth-changed", sync);
       window.removeEventListener("storage", sync);
     };
   }, []);
+
+  useEffect(() => {
+    const openVideo = () => launch();
+    window.addEventListener("kgm-open-video-chat", openVideo);
+    return () => window.removeEventListener("kgm-open-video-chat", openVideo);
+  });
 
   useEffect(() => {
     document.documentElement.classList.toggle("kgm-video-chat-open", open);
@@ -75,10 +87,13 @@ export default function KgmVideoChat() {
   const authenticated = Boolean(account?.id && typeof window !== "undefined" && localStorage.getItem(TOKEN_KEY));
 
   function launch() {
-    if (!authenticated) {
+    const hasToken = typeof window !== "undefined" && Boolean(localStorage.getItem(TOKEN_KEY));
+    const cached = typeof window !== "undefined" ? readAccount() : null;
+    if (!hasToken || !cached?.id) {
       (document.querySelector(".kgm-account-nav-link") as HTMLElement | null)?.click();
       return;
     }
+    setAccount(cached);
     setJoined(false);
     setOpen(true);
   }
@@ -88,17 +103,27 @@ export default function KgmVideoChat() {
     setOpen(false);
   }
 
-  const trigger = host ? createPortal(
+  const navTrigger = navHost ? createPortal(
+    <button className="kgm-video-chat-nav-link" type="button" onClick={launch} aria-label="Open KGM Video Chat" data-kgm-no-translate>
+      <span className="kgm-video-nav-icon" aria-hidden="true">🎥</span>
+      <span className="kgm-video-en">Video Chat</span>
+      <span className="kgm-video-te" lang="te">వీడియో చాట్</span>
+    </button>,
+    navHost,
+  ) : null;
+
+  const chatTrigger = chatActionsHost ? createPortal(
     <button className="kgm-video-chat-trigger" type="button" onClick={launch} title="Open KGM video room" data-kgm-no-translate>
       <span aria-hidden="true">🎥</span>
       <span className="kgm-video-en">Video room</span>
       <span className="kgm-video-te" lang="te">వీడియో గది</span>
     </button>,
-    host,
+    chatActionsHost,
   ) : null;
 
   return <>
-    {trigger}
+    {navTrigger}
+    {chatTrigger}
     {open && <div className="kgm-video-chat-backdrop" role="dialog" aria-modal="true" aria-label="KGM Video Room" data-kgm-no-translate>
       <section className="kgm-video-chat-shell">
         <header className="kgm-video-chat-head">
