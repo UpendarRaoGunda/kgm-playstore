@@ -21,10 +21,10 @@ const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.
 const TOKEN_KEY = "kgm-village-chat-token-v2";
 const THEME_KEY = "kgm-youth-theme-v1";
 
-const creators = [
-  { name: "Devarakonda Chinna", label: "Co-Founder", glyph: "DC", vibe: "Community builder" },
-  { name: "Gunda Sandeep", label: "Co-Founder", glyph: "GS", vibe: "Creator energy" },
-  { name: "Marthi Jashwanth", label: "Co-Founder", glyph: "MJ", vibe: "Young maker" },
+const communityRoles = [
+  { label: "BUILD", glyph: "⌘", title: "Young makers", vibe: "Turn ideas into apps, games and tools." },
+  { label: "CREATE", glyph: "✦", title: "Village creators", vibe: "Share photos, videos, music and stories." },
+  { label: "EXPLORE", glyph: "◎", title: "Curious learners", vibe: "Watch, question, experiment and learn." },
 ];
 
 function kindGlyph(kind: UploadKind) {
@@ -167,9 +167,9 @@ export default function YouthverseExperience() {
         </section>
 
         <section className="yv-section yv-creators">
-          <div className="yv-section-head"><div><span>BUILT BY OUR VILLAGE</span><h2>People are the platform.</h2></div><span className="yv-founder-note">FOUNDING CREW</span></div>
+          <div className="yv-section-head"><div><span>BUILT BY OUR VILLAGE</span><h2>Everyone can be part of the platform.</h2></div><span className="yv-founder-note">CREATE · LEARN · SHARE</span></div>
           <div className="yv-creator-grid">
-            {creators.map((creator, index) => <article className="yv-creator" key={creator.name} style={{"--yv-i": index} as CSSProperties}><div className="yv-avatar">{creator.glyph}</div><div><small>{creator.label}</small><strong>{creator.name}</strong><span>{creator.vibe}</span></div><b>FOUNDING MEMBER</b></article>)}
+            {communityRoles.map((role, index) => <article className="yv-creator" key={role.title} style={{"--yv-i": index} as CSSProperties}><div className="yv-avatar">{role.glyph}</div><div><small>{role.label}</small><strong>{role.title}</strong><span>{role.vibe}</span></div><b>OPEN TO ALL</b></article>)}
             <button className="yv-creator yv-creator-join" onClick={openProfile}><div className="yv-avatar">＋</div><div><small>YOUR TURN</small><strong>{account ? "Style your KGM profile" : "Join the creator wall"}</strong><span>{account ? "avatar · nickname · role" : "Sign in · upload · build"}</span></div><b>{account ? "EDIT ↗" : "START ↗"}</b></button>
           </div>
         </section>
