@@ -49,15 +49,15 @@ export default function KgmCredits() {
   }, []);
 
   const founderSpotlight = (
-    <section className="kgm-founder-spotlight" aria-label="KGM founding crew">
+    <section className="kgm-founder-spotlight" aria-label="People behind KGM">
       <div className="kgm-founder-intro">
         <div>
-          <span className="kgm-founder-eyebrow">✦ THE PEOPLE WHO STARTED IT</span>
+          <span className="kgm-founder-eyebrow">✦ PEOPLE BEHIND KGM</span>
           <h2>Small village. Bold builders. A digital future made from here.</h2>
         </div>
         <p>
           KGM began with a simple belief: <strong>our village should not only consume technology — we should create it.</strong>
-          These are the co-founders helping turn that belief into a community playground for learning, making and sharing.
+          Meet the people helping turn that belief into a community playground for learning, making and sharing.
         </p>
       </div>
 
@@ -66,16 +66,16 @@ export default function KgmCredits() {
           <article className="kgm-founder-card" key={founder.name}>
             <div className="kgm-founder-avatar" aria-hidden="true">{founder.initials}</div>
             <div>
-              <small>KGM CO-FOUNDER</small>
+              <small>CO-FOUNDER</small>
               <strong>{founder.name}</strong>
-              <span>FOUNDING CREW · KORATLAGUDEM</span>
+              <span>KORATLAGUDEM · KGM</span>
             </div>
           </article>
         ))}
       </div>
 
       <div className="kgm-founder-manifesto">
-        <strong>Three co-founders. One village. One shared belief that local talent deserves a global stage.</strong>
+        <strong>One village. One shared belief that local talent deserves a global stage.</strong>
         <span className="kgm-founder-arrow">KORATLAGUDEM → EVERYWHERE</span>
       </div>
     </section>
@@ -85,18 +85,18 @@ export default function KgmCredits() {
     <>
       {spotlightHost ? createPortal(founderSpotlight, spotlightHost) : null}
 
-      <section className="kgm-credits" aria-label="KGM co-founders">
+      <section className="kgm-credits" aria-label="KGM community mission">
         <div className="kgm-credits-copy">
           <span>KGM · KORATLAGUDEM COMMUNITY</span>
           <strong>KGM began here.</strong>
           <p>Built with curiosity, courage and community — so our village can create, learn and share on its own terms.</p>
         </div>
         <div className="kgm-cofounders">
-          <small>FOUNDING CREW</small>
+          <small>OPEN TO EVERYONE</small>
           <div>
-            {cofounders.map((founder) => (
-              <span key={founder.name}>{founder.name}</span>
-            ))}
+            <span>LEARN</span>
+            <span>BUILD</span>
+            <span>SHARE</span>
           </div>
         </div>
       </section>
