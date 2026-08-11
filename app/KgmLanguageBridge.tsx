@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { translateKgmUiText, type KgmLanguage } from "./kgm-telugu";
+import { translateLegacyKgmUiText } from "./kgm-telugu-legacy";
 
 const LANG_KEY = "kgm-language-v2";
 const ORIGINAL_TEXT = new WeakMap<Text, string>();
@@ -23,6 +24,11 @@ const USER_CONTENT_SELECTOR = [
   ".music-manager-song strong",
   ".music-manager-song small",
 ].join(",");
+
+function translateUi(value: string) {
+  const primary = translateKgmUiText(value);
+  return primary !== value ? primary : translateLegacyKgmUiText(value);
+}
 
 function shouldSkip(node: Node) {
   const element = node.nodeType === Node.ELEMENT_NODE ? node as Element : node.parentElement;
@@ -50,7 +56,7 @@ function translateTextNode(node: Text, lang: KgmLanguage) {
   }
 
   const core = original.trim();
-  const translated = lang === "te" ? translateKgmUiText(core) : core;
+  const translated = lang === "te" ? translateUi(core) : core;
   const next = keepWhitespace(original, translated);
   if (current !== next) node.nodeValue = next;
   LAST_TEXT.set(node, next);
@@ -77,7 +83,7 @@ function translateAttributes(element: Element, lang: KgmLanguage) {
     const last = lasts.get(attr);
     if (stored === undefined || (last !== undefined && current !== last && current !== stored)) originals.set(attr, current);
     const original = originals.get(attr) || current;
-    const next = lang === "te" ? translateKgmUiText(original) : original;
+    const next = lang === "te" ? translateUi(original) : original;
     if (current !== next) element.setAttribute(attr, next);
     lasts.set(attr, next);
   });
