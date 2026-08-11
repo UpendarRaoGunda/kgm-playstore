@@ -84,7 +84,6 @@ export default function KgmVideoChat() {
   }, [open]);
 
   const src = useMemo(() => roomUrl(account?.nickname || "KGM member"), [account?.nickname]);
-  const authenticated = Boolean(account?.id && typeof window !== "undefined" && localStorage.getItem(TOKEN_KEY));
 
   function launch() {
     const hasToken = typeof window !== "undefined" && Boolean(localStorage.getItem(TOKEN_KEY));
