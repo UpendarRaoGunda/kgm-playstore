@@ -43,6 +43,7 @@ import "./profile-logout.css";
 import "./hero-cinema-polish.css";
 import "./mobile-home-simplify.css";
 import "./youth-hero-showcase.css";
+import "./mobile-mission-final.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Youthverse",
