@@ -171,6 +171,52 @@
   letter-spacing:0;
 }
 
+/* Full-interface Telugu mode. Text controls and overlays use complex-script-safe typography. */
+.kgm-lang-te body{
+  font-family:var(--kgm-telugu-font)!important;
+  font-kerning:normal;
+  font-variant-ligatures:common-ligatures contextual;
+  text-rendering:optimizeLegibility;
+}
+.kgm-lang-te :where(
+  .kgm-youth-header,
+  .yv-shell,
+  .kgm-free-mission,
+  .kgm-gallery-shell,
+  .kgm-upload-modal,
+  .kgm-live-shelf,
+  .village-chat-shell,
+  .kgm-cinema-shell,
+  .kgm-cinema-player-modal,
+  .kgm-cinema-curate-modal,
+  .kgm-profile-panel,
+  .music-library-manager,
+  .kgm-pwa-dialog
+){font-family:var(--kgm-telugu-font)!important}
+.kgm-lang-te :where(
+  .kgm-youth-header,
+  .yv-shell,
+  .kgm-free-mission,
+  .kgm-gallery-shell,
+  .kgm-upload-modal,
+  .kgm-live-shelf,
+  .village-chat-shell,
+  .kgm-cinema-shell,
+  .kgm-cinema-player-modal,
+  .kgm-cinema-curate-modal,
+  .kgm-profile-panel,
+  .music-library-manager,
+  .kgm-pwa-dialog
+) :where(button,input,textarea,select,label,legend,p,h1,h2,h3,h4,small,em,a,li){
+  font-family:var(--kgm-telugu-font)!important;
+  letter-spacing:0!important;
+  text-transform:none;
+}
+.kgm-lang-te :where(input,textarea)::placeholder{
+  font-family:var(--kgm-telugu-font)!important;
+  letter-spacing:0!important;
+}
+
 @media(max-width:760px){
   .kgm-lang-te .yv-hero-copy h1{
     width:100%;
