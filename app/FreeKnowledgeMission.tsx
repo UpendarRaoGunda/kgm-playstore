@@ -2,7 +2,7 @@ export default function FreeKnowledgeMission() {
   return (
     <section className="kgm-free-mission" aria-label="KGM village mission">
       <div className="kgm-free-mission-inner">
-        <span className="kgm-free-mission-badge">KGM · OPEN KNOWLEDGE</span>
+        <span className="kgm-free-mission-badge">KGM · VILLAGE-BORN · WORLD-BOUND</span>
         <div className="kgm-free-mission-copy">
           <strong>Knowledge should be free for everyone.</strong>
         </div>
