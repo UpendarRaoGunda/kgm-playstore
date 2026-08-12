@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { isKgmAvatarUpload } from "./KgmAvatar";
 
@@ -52,19 +52,28 @@ export default function CommunityShelf() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const requestRef = useRef<AbortController | null>(null);
 
   async function load() {
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
     try {
-      const response = await fetch(`${API}/api/kgm-uploads?kind=all&limit=100`, { cache: "no-store" });
+      const response = await fetch(`${API}/api/kgm-uploads?kind=all&limit=24`, {
+        cache: "no-store",
+        signal: controller.signal,
+      });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(typeof data?.detail === "string" ? data.detail : "Could not load community uploads");
       const publicItems = Array.isArray(data.items) ? data.items.filter((item: UploadItem) => !isKgmAvatarUpload(item)) : [];
       setItems(publicItems);
       setError("");
     } catch (err) {
+      if (controller.signal.aborted) return;
       setError(err instanceof Error ? err.message : "Could not load community uploads");
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
+      if (requestRef.current === controller) requestRef.current = null;
     }
   }
 
@@ -72,15 +81,14 @@ export default function CommunityShelf() {
     const target = document.querySelector(".apps-section");
     setHost(target);
     load();
-    const refresh = () => load();
-    const interval = window.setInterval(() => {
+    const refresh = () => {
       if (document.visibilityState === "visible") load();
-    }, 15000);
-    window.addEventListener("focus", refresh);
+    };
+    const interval = window.setInterval(refresh, 60000);
     window.addEventListener("kgm-gallery-updated", refresh as EventListener);
     return () => {
+      requestRef.current?.abort();
       window.clearInterval(interval);
-      window.removeEventListener("focus", refresh);
       window.removeEventListener("kgm-gallery-updated", refresh as EventListener);
     };
   }, []);
@@ -117,14 +125,14 @@ export default function CommunityShelf() {
         </div>
         <div className="kgm-live-shelf-count" aria-label={`${items.length} public community uploads`}>
           <strong>{items.length}</strong>
-          <span>REAL<br />UPLOADS</span>
+          <span>RECENT<br />UPLOADS</span>
         </div>
       </div>
 
       <div className="kgm-live-shelf-tools">
         <form className="kgm-live-search" onSubmit={submitSearch}>
           <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search real community uploads…" aria-label="Search community uploads" />
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search recent community uploads…" aria-label="Search community uploads" />
         </form>
         <div className="kgm-live-filters" aria-label="Filter community uploads">
           {kinds.map((entry) => <button key={entry.id} type="button" className={kind === entry.id ? "active" : ""} onClick={() => setKind(entry.id)}><span>{entry.icon}</span>{entry.label}</button>)}
@@ -139,8 +147,8 @@ export default function CommunityShelf() {
         {visible.map((item) => <article className={`kgm-live-card ${item.kind}`} key={item.id}>
           <div className="kgm-live-media">
             {item.kind === "image" && <a href={absolute(item.file_url)} target="_blank" rel="noreferrer" aria-label={`Open ${item.title}`}><img src={absolute(item.file_url)} alt={item.title} loading="lazy" /></a>}
-            {item.kind === "video" && <video src={absolute(item.file_url)} controls preload="metadata" playsInline />}
-            {item.kind === "audio" && <div className="kgm-live-audio"><span>♪</span><div><small>COMMUNITY MUSIC</small><strong>{item.title}</strong></div><audio src={absolute(item.file_url)} controls preload="metadata" /></div>}
+            {item.kind === "video" && <video src={absolute(item.file_url)} controls preload="none" playsInline />}
+            {item.kind === "audio" && <div className="kgm-live-audio"><span>♪</span><div><small>COMMUNITY MUSIC</small><strong>{item.title}</strong></div><audio src={absolute(item.file_url)} controls preload="none" /></div>}
             {item.kind === "apk" && <div className="kgm-live-apk"><span>APK</span><strong>{item.title}</strong><small>Community Android package</small></div>}
           </div>
           <div className="kgm-live-card-body">
