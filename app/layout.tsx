@@ -17,6 +17,7 @@ import KgmLanguageBridge from "./KgmLanguageBridge";
 import CinemaCategoryScroller from "./CinemaCategoryScroller";
 import KgmVideoThumbnailEnhancer from "./KgmVideoThumbnailEnhancer";
 import KgmVideoChat from "./KgmVideoChat";
+import KgmLargeUploadBridge from "./KgmLargeUploadBridge";
 import "./globals.css";
 import "./music.css";
 import "./music-library-manager.css";
@@ -93,6 +94,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <KgmCredits />
         <MusicLibraryManager />
         <CommunityGallery />
+        <KgmLargeUploadBridge />
         <KgmVideoThumbnailEnhancer />
         <VillageChat />
         <KgmVideoChat />
