@@ -17,6 +17,9 @@ function ensureReady() {
   ready = true;
 }
 
+// Initialize KGM-owned storage and remove exact-content duplicate uploads at boot.
+ensureReady();
+
 export function getKgmLocalUser(req) {
   ensureReady();
   return getConfiguredUser(req);
