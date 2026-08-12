@@ -1,7 +1,8 @@
-/* Canonical media-fit rules for KGM Gallery.
+/* Canonical media-fit rules for KGM Gallery + Community Shelf.
    User photos/videos must never be cropped. Use intrinsic source dimensions
    instead of thumbnail/card aspect-ratio forcing. */
 
+/* ---------- Full Gallery ---------- */
 .kgm-upload-card.image .kgm-upload-media,
 .kgm-upload-card.video .kgm-upload-media {
   display: block !important;
@@ -21,7 +22,6 @@
   width: 100% !important;
   height: auto !important;
   min-height: 0 !important;
-  max-height: min(78vh, 900px) !important;
   object-fit: contain !important;
   object-position: center !important;
   background: #050609 !important;
@@ -32,9 +32,59 @@
   image-orientation: from-image;
 }
 
-/* Fullscreen playback must always show the complete encoded frame. */
+.kgm-upload-card.video .kgm-upload-media video {
+  max-height: min(78vh, 900px) !important;
+}
+
+/* ---------- Community Shelf ----------
+   IMPORTANT: the actual Shelf renderer uses .kgm-live-card/.kgm-live-media.
+   Earlier rules targeted old/nonexistent .kgm-community-card selectors. */
+.kgm-live-card.image .kgm-live-media,
+.kgm-live-card.video .kgm-live-media {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+  line-height: 0 !important;
+  overflow: hidden !important;
+  background: #050609 !important;
+}
+
+.kgm-live-card.image .kgm-live-media > a {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  line-height: 0 !important;
+}
+
+.kgm-live-card.image .kgm-live-media img,
+.kgm-live-card.video .kgm-live-media video {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  background: #050609 !important;
+}
+
+.kgm-live-card.image .kgm-live-media img {
+  max-height: none !important;
+  image-orientation: from-image;
+}
+
+.kgm-live-card.video .kgm-live-media video {
+  max-height: min(70vh, 760px) !important;
+}
+
+/* Native fullscreen playback must always show the complete encoded frame. */
 .kgm-upload-card video:fullscreen,
-.kgm-upload-card video:-webkit-full-screen {
+.kgm-upload-card video:-webkit-full-screen,
+.kgm-live-card video:fullscreen,
+.kgm-live-card video:-webkit-full-screen {
   width: 100vw !important;
   height: 100vh !important;
   max-width: 100vw !important;
@@ -45,48 +95,9 @@
   margin: 0 !important;
 }
 
-/* Community Shelf uses the same no-crop rule. */
-.kgm-community-card.image .kgm-community-media,
-.kgm-community-card[data-kind="image"] .kgm-community-media {
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  aspect-ratio: auto !important;
-  background: #0b0d14 !important;
-}
-
-.kgm-community-card.image .kgm-community-media img,
-.kgm-community-card[data-kind="image"] .kgm-community-media img {
-  display: block !important;
-  width: 100% !important;
-  height: auto !important;
-  max-height: none !important;
-  object-fit: contain !important;
-  object-position: center !important;
-  image-orientation: from-image;
-}
-
-.kgm-community-card.video .kgm-community-media,
-.kgm-community-card[data-kind="video"] .kgm-community-media {
-  height: auto !important;
-  min-height: 0 !important;
-  aspect-ratio: auto !important;
-  background: #050609 !important;
-}
-
-.kgm-community-card.video .kgm-community-media video,
-.kgm-community-card[data-kind="video"] .kgm-community-media video {
-  display: block !important;
-  width: 100% !important;
-  height: auto !important;
-  max-height: min(70vh, 760px) !important;
-  object-fit: contain !important;
-  object-position: center !important;
-  background: #050609 !important;
-}
-
 @media (max-width: 620px) {
-  .kgm-upload-card.video .kgm-upload-media video {
+  .kgm-upload-card.video .kgm-upload-media video,
+  .kgm-live-card.video .kgm-live-media video {
     max-height: 72vh !important;
   }
 }
