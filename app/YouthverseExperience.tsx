@@ -18,7 +18,7 @@ type UploadItem = {
 type Account = { id: string; nickname: string; role: string };
 type Lang = "en" | "te";
 
-const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
+const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "").replace(/\/$/, "");
 const TOKEN_KEY = "kgm-village-chat-token-v2";
 const LANG_KEY = "kgm-language-v2";
 const LAST_VISIT_KEY = "kgm-home-last-visit-v2";

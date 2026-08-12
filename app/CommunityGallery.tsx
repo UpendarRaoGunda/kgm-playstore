@@ -29,7 +29,7 @@ type SelectedUpload = {
   previewUrl: string;
 };
 
-const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
+const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "").replace(/\/$/, "");
 const TOKEN_KEY = "kgm-village-chat-token-v2";
 const kinds: { id: GalleryKind; label: string; icon: string }[] = [
   { id: "all", label: "Everything", icon: "✦" },

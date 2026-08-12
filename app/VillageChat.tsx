@@ -21,7 +21,7 @@ class KgmApiError extends Error {
   }
 }
 
-const CHAT_API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
+const CHAT_API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "").replace(/\/$/, "");
 const TOKEN_KEY = "kgm-village-chat-token-v2";
 const ACCOUNT_CACHE_KEY = "kgm-account-cache-v1";
 const NOTIFY_KEY = "kgm-village-chat-notifications-v1";

@@ -21,7 +21,7 @@ type UploadItem = {
   community_warning?: string | null;
 };
 
-const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
+const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "").replace(/\/$/, "");
 const kinds: { id: ShelfKind; label: string; icon: string }[] = [
   { id: "all", label: "All", icon: "✦" },
   { id: "image", label: "Photos", icon: "▧" },

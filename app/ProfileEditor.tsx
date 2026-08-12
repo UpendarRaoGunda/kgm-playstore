@@ -12,7 +12,7 @@ import KgmAvatar, {
   type KgmProfile,
 } from "./KgmAvatar";
 
-const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
+const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "").replace(/\/$/, "");
 const TOKEN_KEY = "kgm-village-chat-token-v2";
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 

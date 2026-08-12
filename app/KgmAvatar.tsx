@@ -44,7 +44,7 @@ export const KGM_AVATAR_PRESETS = [
   { id: "star-bloom", emoji: "🌟", name: "Star Bloom", vibe: "quietly iconic", tone: "sunset", colors: ["#ffd56a", "#ff66b8"] },
 ] as const;
 
-const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
+const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "").replace(/\/$/, "");
 
 export function getAvatarPreset(id?: string | null) {
   return KGM_AVATAR_PRESETS.find((item) => item.id === id) || KGM_AVATAR_PRESETS[0];

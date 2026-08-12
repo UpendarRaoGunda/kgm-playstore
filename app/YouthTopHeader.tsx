@@ -7,7 +7,7 @@ import { PwaInstallButton } from "./PwaInstall";
 type Account = { id: string; email: string; nickname: string; role: "Child" | "Teen" | "Adult"; created_at?: string };
 type Lang = "en" | "te";
 
-const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "https://mana-koratlagudem.onrender.com").replace(/\/$/, "");
+const API = (process.env.NEXT_PUBLIC_KGM_CHAT_API || "").replace(/\/$/, "");
 const TOKEN_KEY = "kgm-village-chat-token-v2";
 const ACCOUNT_CACHE_KEY = "kgm-account-cache-v1";
 const THEME_KEY = "kgm-youth-theme-v1";
