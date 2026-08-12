@@ -15,7 +15,6 @@ import YouthverseExperience from "./YouthverseExperience";
 import YouthTopHeader from "./YouthTopHeader";
 import KgmLanguageBridge from "./KgmLanguageBridge";
 import CinemaCategoryScroller from "./CinemaCategoryScroller";
-import KgmVideoThumbnailEnhancer from "./KgmVideoThumbnailEnhancer";
 import KgmVideoChat from "./KgmVideoChat";
 import "./globals.css";
 import "./music.css";
@@ -84,7 +83,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <KgmCredits />
         <MusicLibraryManager />
         <CommunityGallery />
-        <KgmVideoThumbnailEnhancer />
         <VillageChat />
         <KgmVideoChat />
         <ScienceCinema />
