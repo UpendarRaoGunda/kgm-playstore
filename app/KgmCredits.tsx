@@ -86,7 +86,7 @@ export default function KgmCredits() {
     <>
       {spotlightHost ? createPortal(founderSpotlight, spotlightHost) : null}
       <section className="kgm-credits" aria-label={text("KGM community mission", "KGM కమ్యూనిటీ లక్ష్యం")}>
-        <div className="kgm-credits-copy"><span>KGM · KORATLAGUDEM</span><strong>{text("Knowledge. Creation. Community.", "జ్ఞానం. సృష్టి. కమ్యూనిటీ.")}</strong><p>{text("Free to learn. Open to create. Built to share.", "నేర్చుకోవడం ఉచితం. సృష్టించడానికి అందరికీ అవకాశం. పంచుకోవడానికి నిర్మించాం.")}</p></div>
+        <div className="kgm-credits-copy"><span>KGM · KORATLAGUDEM</span><strong>{text("Knowledge. Creation. Community.", "జ్ఞానం. సృష్టి. కమ్యూనిటీ.")}</strong><p>{text("Free to learn. Open to create. Built to share.", "నేర్చుకోవడం ఉచితం. సృష్టించడానికి అందరికీ అవకాశం. పంచుకోవడానికి నిర్మించాం.")}</p><nav className="kgm-policy-links" aria-label={text("KGM policies", "KGM విధానాలు")}><a href="/privacy">{text("Privacy", "గోప్యత")}</a><a href="/privacy#safety">{text("Youth safety", "యువ భద్రత")}</a></nav></div>
         <div className="kgm-cofounders"><small>{text("OPEN TO EVERYONE", "అందరికీ తెరిచి ఉంది")}</small><div><span>{text("LEARN", "నేర్చుకో")}</span><span>{text("BUILD", "నిర్మించు")}</span><span>{text("SHARE", "పంచుకో")}</span></div></div>
       </section>
     </>
