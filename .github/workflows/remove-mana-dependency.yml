@@ -1,4 +1,4 @@
-name: Remove Mana dependency
+name: Remove external KGM dependency
 
 on:
   push:
@@ -16,15 +16,23 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Remove Mana URL from KGM source
+      - name: Remove cross-project URL from KGM source
         shell: bash
         run: |
           set -euo pipefail
-          grep -RIl --exclude-dir=.git 'https://mana-koratlagudem.onrender.com' . | while read -r file; do
-            sed -i 's#https://mana-koratlagudem.onrender.com##g' "$file"
+          target="https://mana-"'koratlagudem.onrender.com'
+          mapfile -t files < <(grep -RIl --exclude-dir=.git --exclude='remove-mana-dependency.yml' "$target" . || true)
+          for file in "${files[@]}"; do
+            python3 - "$file" "$target" <<'PY'
+import pathlib, sys
+path = pathlib.Path(sys.argv[1])
+target = sys.argv[2]
+text = path.read_text()
+path.write_text(text.replace(target, ""))
+PY
           done
-          if grep -RIn --exclude-dir=.git 'mana-koratlagudem.onrender.com' .; then
-            echo 'Mana URL still present' >&2
+          if grep -RIn --exclude-dir=.git --exclude='remove-mana-dependency.yml' "$target" .; then
+            echo 'Cross-project URL still present' >&2
             exit 1
           fi
       - name: Commit cleanup
@@ -37,5 +45,5 @@ jobs:
           git config user.name 'KGM cleanup bot'
           git config user.email 'actions@github.com'
           git add -A
-          git commit -m 'Remove Mana URL from KGM frontend'
+          git commit -m 'Remove cross-project URL from KGM frontend'
           git push origin HEAD:main
