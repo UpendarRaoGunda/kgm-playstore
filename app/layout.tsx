@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import MusicLibraryManager from "./MusicLibraryManager";
-import CommunityGallery from "./CommunityGalleryV2";
+import CommunityGallery from "./CommunityGalleryV3";
 import CommunityShelf from "./CommunityShelf";
 import VillageChat from "./VillageChat";
 import ScienceCinema from "./ScienceCinema";
@@ -53,15 +53,8 @@ export const metadata: Metadata = {
   title: "KGM · Koratlagudem Youthverse",
   description: "Koratlagudem's digital youth network for community apps, science cinema, music, photos, videos, creators and live conversation — free for everyone.",
   applicationName: "KGM Youthverse",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "KGM Youthverse",
-  },
-  other: {
-    "codex-preview": "development",
-    "mobile-web-app-capable": "yes",
-  },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "KGM Youthverse" },
+  other: { "codex-preview": "development", "mobile-web-app-capable": "yes" },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -74,10 +67,7 @@ export const metadata: Metadata = {
   manifest: "/site-manifest.json",
 };
 
-export const viewport: Viewport = {
-  colorScheme: "dark light",
-  themeColor: "#09090d",
-};
+export const viewport: Viewport = { colorScheme: "dark light", themeColor: "#09090d" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
