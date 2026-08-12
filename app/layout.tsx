@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import MusicLibraryManager from "./MusicLibraryManager";
-import CommunityGallery from "./CommunityGallery";
+import CommunityGallery from "./CommunityGalleryV2";
 import CommunityShelf from "./CommunityShelf";
 import VillageChat from "./VillageChat";
 import ScienceCinema from "./ScienceCinema";
@@ -17,7 +17,6 @@ import KgmLanguageBridge from "./KgmLanguageBridge";
 import CinemaCategoryScroller from "./CinemaCategoryScroller";
 import KgmVideoThumbnailEnhancer from "./KgmVideoThumbnailEnhancer";
 import KgmVideoChat from "./KgmVideoChat";
-import KgmLargeUploadBridge from "./KgmLargeUploadBridge";
 import "./globals.css";
 import "./music.css";
 import "./music-library-manager.css";
@@ -94,7 +93,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <KgmCredits />
         <MusicLibraryManager />
         <CommunityGallery />
-        <KgmLargeUploadBridge />
         <KgmVideoThumbnailEnhancer />
         <VillageChat />
         <KgmVideoChat />
