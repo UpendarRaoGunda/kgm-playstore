@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { readFileSync, writeFileSync } from "node:fs";
 import { configureKgmLocalApi, getKgmLocalUser as getConfiguredUser, handleKgmLocalApi as handleConfiguredApi } from "./kgm-local-api-impl.mjs";
+import { dedupeKgmUploads } from "./kgm-upload-dedupe.mjs";
 
 let ready = false;
 function ensureReady() {
@@ -11,6 +12,7 @@ function ensureReady() {
     try { return JSON.parse(readFileSync(catalogPath, "utf8")); } catch { return []; }
   };
   const saveRenderCatalog = (items) => writeFileSync(catalogPath, JSON.stringify(items, null, 2));
+  dedupeKgmUploads(storage);
   configureKgmLocalApi({ storage, renderCatalog, saveRenderCatalog, pinnedMovies: [] });
   ready = true;
 }
