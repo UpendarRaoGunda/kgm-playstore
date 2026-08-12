@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-const VIDEO_SELECTOR = ".kgm-upload-media > video, .kgm-live-media > video";
+const VIDEO_SELECTOR = ".kgm-upload-media > video";
 const LANG_KEY = "kgm-language-v2";
 
 function durationLabel(seconds: number) {
@@ -15,8 +15,7 @@ function durationLabel(seconds: number) {
 
 function frameTime(duration: number) {
   if (!Number.isFinite(duration) || duration <= 0.2) return 0;
-  // Avoid the often-black first frame, but never skip meaningful content.
-  return Math.min(1.25, Math.max(0.18, duration * 0.035));
+  return Math.min(1.0, Math.max(0.15, duration * 0.025));
 }
 
 function playLabel() {
@@ -26,14 +25,32 @@ function playLabel() {
 export default function KgmVideoThumbnailEnhancer() {
   useEffect(() => {
     const cleanups = new Map<HTMLVideoElement, () => void>();
+    const pending = new Set<HTMLVideoElement>();
+
+    const viewportObserver = "IntersectionObserver" in window
+      ? new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            const video = entry.target as HTMLVideoElement;
+            viewportObserver.unobserve(video);
+            pending.delete(video);
+            prime(video);
+          });
+        }, { rootMargin: "220px 0px", threshold: 0.01 })
+      : null;
+
+    const prime = (video: HTMLVideoElement) => {
+      if (video.dataset.kgmVideoPrimed === "1") return;
+      video.dataset.kgmVideoPrimed = "1";
+      video.preload = "metadata";
+      try { video.load(); } catch { /* browser will load on demand */ }
+    };
 
     const setup = (video: HTMLVideoElement) => {
       const host = video.parentElement;
-      if (!host || !(host.classList.contains("kgm-upload-media") || host.classList.contains("kgm-live-media"))) return;
+      if (!host || !host.classList.contains("kgm-upload-media")) return;
 
       if (video.dataset.kgmVideoThumb === "ready") {
-        // React may re-apply the `controls` prop on a later render. Keep native
-        // controls hidden until the visitor intentionally starts playback.
         if (!host.classList.contains("kgm-video-is-playing") && video.controls) video.controls = false;
         return;
       }
@@ -42,7 +59,7 @@ export default function KgmVideoThumbnailEnhancer() {
       host.classList.add("kgm-video-thumb-host");
       video.classList.add("kgm-video-thumb-native");
       video.controls = false;
-      video.preload = "metadata";
+      video.preload = "none";
       video.playsInline = true;
 
       const trigger = document.createElement("button");
@@ -54,7 +71,7 @@ export default function KgmVideoThumbnailEnhancer() {
 
       const meta = trigger.querySelector("small");
       let target = 0;
-      let primed = false;
+      let frameRequested = false;
       let intentionallyPlaying = false;
 
       const updateLanguage = () => trigger.setAttribute("aria-label", playLabel());
@@ -65,14 +82,13 @@ export default function KgmVideoThumbnailEnhancer() {
         if (meta) meta.textContent = duration;
       };
 
-      const primeFrame = () => {
-        if (primed) return;
-        primed = true;
+      const requestFrame = () => {
+        if (frameRequested || intentionallyPlaying) return;
+        frameRequested = true;
         const duration = video.duration;
         target = frameTime(duration);
         const label = durationLabel(duration);
         if (meta) meta.textContent = label;
-
         if (!target) {
           markFrameReady();
           return;
@@ -86,7 +102,7 @@ export default function KgmVideoThumbnailEnhancer() {
       };
 
       const onLoadedData = () => {
-        if (!primed) primeFrame();
+        if (!frameRequested) requestFrame();
         else if (Math.abs(video.currentTime - target) < 0.08) markFrameReady();
       };
 
@@ -101,10 +117,14 @@ export default function KgmVideoThumbnailEnhancer() {
 
       const startPlayback = () => {
         intentionallyPlaying = true;
+        pending.delete(video);
+        viewportObserver?.unobserve(video);
         host.classList.add("kgm-video-is-playing");
         trigger.hidden = true;
         video.controls = true;
-        try { video.currentTime = 0; } catch { /* keep the decoded frame */ }
+        video.preload = "auto";
+        if (video.dataset.kgmVideoPrimed !== "1") prime(video);
+        try { video.currentTime = 0; } catch { /* keep current frame */ }
         const playing = video.play();
         if (playing) playing.catch(() => {
           intentionallyPlaying = false;
@@ -123,23 +143,25 @@ export default function KgmVideoThumbnailEnhancer() {
       };
 
       trigger.addEventListener("click", startPlayback);
-      video.addEventListener("loadedmetadata", primeFrame);
+      video.addEventListener("loadedmetadata", requestFrame);
       video.addEventListener("loadeddata", onLoadedData);
       video.addEventListener("seeked", onSeeked);
       video.addEventListener("error", onError);
       video.addEventListener("ended", onEnded);
       window.addEventListener("kgm-language-changed", updateLanguage);
 
-      if (video.readyState >= 1) primeFrame();
-      else {
-        // The original cards use preload=metadata. Calling load after hiding the
-        // native controls makes Android Chrome fetch metadata and a seekable frame.
-        try { video.load(); } catch { /* browser will load when it enters view */ }
+      if (viewportObserver) {
+        pending.add(video);
+        viewportObserver.observe(video);
+      } else {
+        prime(video);
       }
 
       cleanups.set(video, () => {
+        pending.delete(video);
+        viewportObserver?.unobserve(video);
         trigger.removeEventListener("click", startPlayback);
-        video.removeEventListener("loadedmetadata", primeFrame);
+        video.removeEventListener("loadedmetadata", requestFrame);
         video.removeEventListener("loadeddata", onLoadedData);
         video.removeEventListener("seeked", onSeeked);
         video.removeEventListener("error", onError);
@@ -153,12 +175,14 @@ export default function KgmVideoThumbnailEnhancer() {
     scan();
 
     const observer = new MutationObserver(scan);
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["controls", "src"] });
+    observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
       observer.disconnect();
+      viewportObserver?.disconnect();
       cleanups.forEach((cleanup) => cleanup());
       cleanups.clear();
+      pending.clear();
     };
   }, []);
 
