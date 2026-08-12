@@ -24,6 +24,10 @@ function ensureReady() {
   ready = true;
 }
 
+// Initialize KGM-owned storage and any one-time migration during service boot,
+// rather than waiting for the first Gallery/API request.
+ensureReady();
+
 export function getKgmLocalUser(req) {
   ensureReady();
   return getConfiguredUser(req);
