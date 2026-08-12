@@ -1,59 +1,40 @@
 /* Canonical media-fit rules for KGM Gallery.
-   User photos/videos must never be cropped. Cards preserve full content,
-   and native fullscreen always contains the entire video frame. */
+   User photos/videos must never be cropped. Use intrinsic source dimensions
+   instead of thumbnail/card aspect-ratio forcing. */
 
-.kgm-upload-card.image .kgm-upload-media {
+.kgm-upload-card.image .kgm-upload-media,
+.kgm-upload-card.video .kgm-upload-media {
   display: block !important;
+  width: 100% !important;
   height: auto !important;
   min-height: 0 !important;
   max-height: none !important;
   aspect-ratio: auto !important;
   line-height: 0 !important;
   overflow: hidden !important;
-  background: #0b0d14 !important;
+  background: #050609 !important;
+}
+
+.kgm-upload-card.image .kgm-upload-media img,
+.kgm-upload-card.video .kgm-upload-media video {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: min(78vh, 900px) !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  background: #050609 !important;
 }
 
 .kgm-upload-card.image .kgm-upload-media img {
-  display: block !important;
-  width: 100% !important;
-  height: auto !important;
-  min-height: 0 !important;
   max-height: none !important;
-  object-fit: contain !important;
-  object-position: center !important;
   image-orientation: from-image;
-  background: #0b0d14 !important;
 }
 
-.kgm-upload-card.video .kgm-upload-media {
-  display: grid !important;
-  place-items: center !important;
-  width: 100% !important;
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  aspect-ratio: 16 / 9 !important;
-  overflow: hidden !important;
-  background: #050609 !important;
-}
-
-.kgm-upload-card.video .kgm-upload-media video,
-.kgm-upload-card.video .kgm-video-thumb-native {
-  display: block !important;
-  width: 100% !important;
-  height: 100% !important;
-  max-width: 100% !important;
-  max-height: 100% !important;
-  object-fit: contain !important;
-  object-position: center !important;
-  background: #050609 !important;
-}
-
-/* Native fullscreen must show the complete source frame, regardless of card CSS. */
+/* Fullscreen playback must always show the complete encoded frame. */
 .kgm-upload-card video:fullscreen,
-.kgm-upload-card video:-webkit-full-screen,
-.kgm-video-thumb-native:fullscreen,
-.kgm-video-thumb-native:-webkit-full-screen {
+.kgm-upload-card video:-webkit-full-screen {
   width: 100vw !important;
   height: 100vh !important;
   max-width: 100vw !important;
@@ -64,7 +45,7 @@
   margin: 0 !important;
 }
 
-/* Community Shelf follows the same no-crop rule for uploaded media. */
+/* Community Shelf uses the same no-crop rule. */
 .kgm-community-card.image .kgm-community-media,
 .kgm-community-card[data-kind="image"] .kgm-community-media {
   height: auto !important;
@@ -76,6 +57,7 @@
 
 .kgm-community-card.image .kgm-community-media img,
 .kgm-community-card[data-kind="image"] .kgm-community-media img {
+  display: block !important;
   width: 100% !important;
   height: auto !important;
   max-height: none !important;
@@ -84,17 +66,27 @@
   image-orientation: from-image;
 }
 
+.kgm-community-card.video .kgm-community-media,
+.kgm-community-card[data-kind="video"] .kgm-community-media {
+  height: auto !important;
+  min-height: 0 !important;
+  aspect-ratio: auto !important;
+  background: #050609 !important;
+}
+
 .kgm-community-card.video .kgm-community-media video,
 .kgm-community-card[data-kind="video"] .kgm-community-media video {
+  display: block !important;
   width: 100% !important;
-  height: 100% !important;
+  height: auto !important;
+  max-height: min(70vh, 760px) !important;
   object-fit: contain !important;
   object-position: center !important;
   background: #050609 !important;
 }
 
 @media (max-width: 620px) {
-  .kgm-upload-card.video .kgm-upload-media {
-    aspect-ratio: 16 / 9 !important;
+  .kgm-upload-card.video .kgm-upload-media video {
+    max-height: 72vh !important;
   }
 }
