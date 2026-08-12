@@ -1,0 +1,41 @@
+name: Remove Mana dependency
+
+on:
+  push:
+    paths:
+      - '.github/workflows/remove-mana-dependency.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Remove Mana URL from KGM source
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -RIl --exclude-dir=.git 'https://mana-koratlagudem.onrender.com' . | while read -r file; do
+            sed -i 's#https://mana-koratlagudem.onrender.com##g' "$file"
+          done
+          if grep -RIn --exclude-dir=.git 'mana-koratlagudem.onrender.com' .; then
+            echo 'Mana URL still present' >&2
+            exit 1
+          fi
+      - name: Commit cleanup
+        shell: bash
+        run: |
+          if git diff --quiet; then
+            echo 'No remaining references.'
+            exit 0
+          fi
+          git config user.name 'KGM cleanup bot'
+          git config user.email 'actions@github.com'
+          git add -A
+          git commit -m 'Remove Mana URL from KGM frontend'
+          git push origin HEAD:main
