@@ -25,6 +25,7 @@ import "./telugu-typography.css";
 import "./kgm-ai-v3.css";
 import "./kgm-shell.css";
 import "./kgm-credits-v3.css";
+import "./overlay-layout.css";
 
 export const metadata: Metadata = {
   title: "KGM Youthverse · Koratlagudem",
