@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 
 const LANG_KEY = "kgm-language-v2";
 const cofounders = [
@@ -11,7 +10,6 @@ const cofounders = [
 ];
 
 export default function KgmCredits() {
-  const [spotlightHost, setSpotlightHost] = useState<HTMLElement | null>(null);
   const [telugu, setTelugu] = useState(false);
   const text = (en: string, te: string) => telugu ? te : en;
 
@@ -26,69 +24,40 @@ export default function KgmCredits() {
     };
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    let attempts = 0;
-    let timer = 0;
-
-    const mountSpotlight = () => {
-      if (cancelled) return;
-      const makers = document.querySelector(".kgm-home-makers");
-      if (!makers) {
-        attempts += 1;
-        if (attempts < 160) timer = window.setTimeout(mountSpotlight, 50);
-        return;
-      }
-      let host = document.getElementById("kgm-founder-spotlight-root") as HTMLElement | null;
-      if (!host) {
-        host = document.createElement("div");
-        host.id = "kgm-founder-spotlight-root";
-        makers.insertAdjacentElement("afterend", host);
-      }
-      setSpotlightHost(host);
-    };
-
-    mountSpotlight();
-    return () => {
-      cancelled = true;
-      if (timer) window.clearTimeout(timer);
-      document.getElementById("kgm-founder-spotlight-root")?.remove();
-    };
-  }, []);
-
-  const founderSpotlight = (
-    <section className="kgm-founder-spotlight" aria-label={text("KGM origin story", "KGM ఆరంభ కథ")}>
-      <div className="kgm-founder-intro">
-        <div>
-          <span className="kgm-founder-eyebrow">✦ {text("WHERE KGM BEGAN", "KGM ఎక్కడ మొదలైంది")}</span>
-          <h2>{text("Built in Koratlagudem. Built together.", "కొరట్లగూడెంలో నిర్మించాం. కలిసి నిర్మించాం.")}</h2>
+  return (
+    <section className="kgmCreditsV3" aria-label={text("KGM co-founders and origin story", "KGM సహ వ్యవస్థాపకులు మరియు ఆరంభ కథ")}>
+      <div className="kgmFounderPanel">
+        <div className="kgmFounderHead">
+          <div>
+            <span>✦ {text("WHERE KGM BEGAN", "KGM ఎక్కడ మొదలైంది")}</span>
+            <h2>{text("Built in Koratlagudem. Built together.", "కొరట్లగూడెంలో నిర్మించాం. కలిసి నిర్మించాం.")}</h2>
+          </div>
+          <p>{text("KGM began with one belief: our village should not only consume technology — we should create it, learn through it and share what we make with the world.", "KGM ఒక నమ్మకంతో మొదలైంది: మన ఊరు టెక్నాలజీని కేవలం ఉపయోగించకూడదు — మనమే సృష్టించాలి, దాని ద్వారా నేర్చుకోవాలి, మన సృష్టిని ప్రపంచంతో పంచుకోవాలి.")}</p>
         </div>
-        <p>{text("KGM began with one belief: our village should not only consume technology — we should create it, learn through it and share what we make with the world.", "KGM ఒక నమ్మకంతో మొదలైంది: మన ఊరు టెక్నాలజీని కేవలం ఉపయోగించకూడదు — మనమే సృష్టించాలి, దాని ద్వారా నేర్చుకోవాలి, మన సృష్టిని ప్రపంచంతో పంచుకోవాలి.")}</p>
+
+        <div className="kgmFounderGridV3">
+          {cofounders.map((founder) => (
+            <article className="kgmFounderCardV3" key={founder.name}>
+              <div className="kgmFounderAvatarV3" aria-hidden="true">{founder.initials}</div>
+              <div>
+                <small>{text("CO-FOUNDER", "సహ వ్యవస్థాపకుడు")}</small>
+                <strong>{founder.name}</strong>
+                <span>KORATLAGUDEM · KGM</span>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="kgmFounderManifestoV3">
+          <strong>{text("Local talent deserves a global stage.", "స్థానిక ప్రతిభకు ప్రపంచ వేదిక కావాలి.")}</strong>
+          <span>KORATLAGUDEM → WORLD</span>
+        </div>
       </div>
 
-      <div className="kgm-founder-grid">
-        {cofounders.map((founder) => (
-          <article className="kgm-founder-card" key={founder.name}>
-            <div className="kgm-founder-avatar" aria-hidden="true">{founder.initials}</div>
-            <div><small>{text("CO-FOUNDER", "సహ వ్యవస్థాపకుడు")}</small><strong>{founder.name}</strong><span>KORATLAGUDEM · KGM</span></div>
-          </article>
-        ))}
-      </div>
-
-      <div className="kgm-founder-manifesto">
-        <strong>{text("Local talent deserves a global stage.", "స్థానిక ప్రతిభకు ప్రపంచ వేదిక కావాలి.")}</strong>
-        <span className="kgm-founder-arrow">KORATLAGUDEM → WORLD</span>
+      <div className="kgmCreditsFooterV3">
+        <div><strong>{text("Knowledge. Creation. Community.", "జ్ఞానం. సృష్టి. కమ్యూనిటీ.")}</strong> · {text("Free to learn. Open to create. Built to share.", "నేర్చుకోవడం ఉచితం. సృష్టించడానికి అందరికీ అవకాశం. పంచుకోవడానికి నిర్మించాం.")}</div>
+        <div><a href="/privacy">{text("Privacy", "గోప్యత")}</a> · <a href="/privacy#safety">{text("Youth safety", "యువ భద్రత")}</a></div>
       </div>
     </section>
-  );
-
-  return (
-    <>
-      {spotlightHost ? createPortal(founderSpotlight, spotlightHost) : null}
-      <section className="kgm-credits" aria-label={text("KGM community mission", "KGM కమ్యూనిటీ లక్ష్యం")}>
-        <div className="kgm-credits-copy"><span>KGM · KORATLAGUDEM</span><strong>{text("Knowledge. Creation. Community.", "జ్ఞానం. సృష్టి. కమ్యూనిటీ.")}</strong><p>{text("Free to learn. Open to create. Built to share.", "నేర్చుకోవడం ఉచితం. సృష్టించడానికి అందరికీ అవకాశం. పంచుకోవడానికి నిర్మించాం.")}</p><nav className="kgm-policy-links" aria-label={text("KGM policies", "KGM విధానాలు")}><a href="/privacy">{text("Privacy", "గోప్యత")}</a><a href="/privacy#safety">{text("Youth safety", "యువ భద్రత")}</a></nav></div>
-        <div className="kgm-cofounders"><small>{text("OPEN TO EVERYONE", "అందరికీ తెరిచి ఉంది")}</small><div><span>{text("LEARN", "నేర్చుకో")}</span><span>{text("BUILD", "నిర్మించు")}</span><span>{text("SHARE", "పంచుకో")}</span></div></div>
-      </section>
-    </>
   );
 }
