@@ -16,6 +16,7 @@ import YouthTopHeader from "./YouthTopHeader";
 import KgmLanguageBridge from "./KgmLanguageBridge";
 import CinemaCategoryScroller from "./CinemaCategoryScroller";
 import KgmVideoChat from "./KgmVideoChat";
+import KgmAiTutor from "./KgmAiTutor";
 import "./globals.css";
 import "./music.css";
 import "./music-library-manager.css";
@@ -49,6 +50,7 @@ import "./village-chat-genz.css";
 import "./home-v2.css";
 import "./gallery-media-fit-final.css";
 import "./hero-actions-final.css";
+import "./kgm-ai-tutor.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Youthverse",
@@ -92,6 +94,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <CinemaPosterSourceEnhancer />
         <CinemaCategoryScroller />
         <ProfileEditor />
+        <KgmAiTutor />
         <PwaManager />
       </body>
     </html>
