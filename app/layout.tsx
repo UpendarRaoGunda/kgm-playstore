@@ -17,6 +17,7 @@ import KgmLanguageBridge from "./KgmLanguageBridge";
 import CinemaCategoryScroller from "./CinemaCategoryScroller";
 import KgmVideoChat from "./KgmVideoChat";
 import KgmAiTutor from "./KgmAiTutor";
+import KgmAiChatBridge from "./KgmAiChatBridge";
 import "./globals.css";
 import "./music.css";
 import "./music-library-manager.css";
@@ -87,6 +88,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <KgmCredits />
         <MusicLibraryManager />
         <CommunityGallery />
+        <KgmAiChatBridge />
         <VillageChat />
         <KgmVideoChat />
         <ScienceCinema />
