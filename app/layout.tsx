@@ -51,6 +51,7 @@ import "./home-v2.css";
 import "./gallery-media-fit-final.css";
 import "./hero-actions-final.css";
 import "./kgm-ai-tutor.css";
+import "./kgm-ai-chat-coordination.css";
 
 export const metadata: Metadata = {
   title: "KGM · Koratlagudem Youthverse",
