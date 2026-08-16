@@ -130,6 +130,10 @@ export default function YouthTopHeader() {
   function clickExisting(selector: string) { closeMenu(); (document.querySelector(selector) as HTMLElement | null)?.click(); }
   function openCinema() { closeMenu(); window.dispatchEvent(new Event("kgm-open-cinema")); }
   function openVideo() { closeMenu(); window.dispatchEvent(new Event("kgm-open-video-chat")); }
+  function openVillageChat() {
+    closeMenu();
+    window.dispatchEvent(new CustomEvent("kgm-open-village-chat"));
+  }
   function openUpload() { closeMenu(); clickExisting(".kgm-gallery-nav-link"); window.setTimeout(() => (document.querySelector(".kgm-gallery-upload-button") as HTMLElement | null)?.click(), 90); }
   function openAccount() {
     closeMenu();
@@ -168,7 +172,8 @@ export default function YouthTopHeader() {
           <button type="button" onClick={() => jump("kgm-explore")}>{text("Explore", "అన్వేషించండి")}</button>
           <button type="button" className="kgm-nav-create" onClick={openUpload}>{text("Create", "సృష్టించండి")}</button>
           <button type="button" onClick={openCinema}>{text("Watch", "చూడండి")}</button>
-          <button type="button" className="kgm-nav-community" onClick={() => jump("kgm-community-live")}>{text("Community", "కమ్యూనిటీ")}{chatUnread > 0 && <b className="kgm-youth-chat-badge">{unreadLabel}</b>}</button>
+          <button type="button" className="kgm-nav-community" onClick={() => jump("kgm-community-live")}>{text("Community", "కమ్యూనిటీ")}</button>
+          <button type="button" className="kgm-nav-village-chat" onClick={openVillageChat}><span aria-hidden="true">💬</span>{text("Village Chat", "గ్రామ చాట్")}{chatUnread > 0 && <b className="kgm-youth-chat-badge">{unreadLabel}</b>}</button>
         </nav>
 
         <div className="kgm-youth-header-actions">
@@ -187,7 +192,7 @@ export default function YouthTopHeader() {
         <button type="button" onClick={() => clickExisting(".kgm-gallery-nav-link")}><span>✦</span>{text("Gallery", "గ్యాలరీ")}</button>
         <button type="button" onClick={() => jump("apps")}><span>▦</span>{text("Apps", "యాప్స్")}</button>
         <button type="button" onClick={() => jump("music")}><span>♪</span>{text("Music", "సంగీతం")}</button>
-        <button type="button" onClick={() => clickExisting(".kgm-chat-nav-link")}><span>💬</span>{text("Village Chat", "గ్రామ చాట్")}{chatUnread > 0 && <b className="kgm-youth-chat-badge">{unreadLabel}</b>}</button>
+        <button type="button" className="kgm-youth-mobile-chat" onClick={openVillageChat}><span>💬</span>{text("Village Chat", "గ్రామ చాట్")}{chatUnread > 0 && <b className="kgm-youth-chat-badge">{unreadLabel}</b>}</button>
         <button type="button" onClick={openVideo}><span>🎥</span>{text("Video Room", "వీడియో గది")}</button>
         <div className="kgm2-menu-tools">
           <button type="button" onClick={toggleLanguage}>{telugu ? "English" : "తెలుగు"}</button>
