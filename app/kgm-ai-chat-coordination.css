@@ -1,0 +1,47 @@
+/* Shared launcher/drawer choreography for KGM AI + Village Chat. */
+@media (min-width:761px){
+  .village-chat-launcher{
+    right:190px;
+    left:auto;
+    bottom:20px;
+    z-index:785;
+    min-height:56px;
+    padding:7px 12px 7px 8px;
+    border:1px solid rgba(141,108,255,.28);
+    border-radius:20px;
+    background:linear-gradient(145deg,rgba(25,19,48,.97),rgba(13,15,24,.97));
+    box-shadow:0 18px 48px rgba(0,0,0,.34),0 0 26px rgba(141,108,255,.07);
+    transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,opacity .18s ease;
+  }
+  .village-chat-launcher:hover{transform:translateY(-2px);border-color:rgba(141,108,255,.52);box-shadow:0 23px 56px rgba(0,0,0,.4),0 0 32px rgba(141,108,255,.1)}
+  .village-chat-launcher .village-chat-icon{width:40px;height:40px;border-radius:14px;background:linear-gradient(145deg,#8d6cff,#6847ed);box-shadow:0 7px 20px rgba(141,108,255,.18)}
+  .village-chat-launcher strong{font-size:11px}.village-chat-launcher small{font-size:8px;color:#aeb6c8}
+  .village-chat-pulse{left:39px;top:6px;background:#5affbd;box-shadow:0 0 0 4px rgba(90,255,189,.14)}
+
+  html.kgm-ai-open .kgm-chat-toast{right:calc(var(--kgmai-panel-width) + 36px);bottom:20px}
+  html.kgm-chat-open .kgmAiLauncher{opacity:0;pointer-events:none;transform:translateY(8px) scale(.96)}
+
+  .has-music-player .kgmAiLauncher{bottom:96px}
+  .has-music-player .kgmAiPanel{bottom:164px;height:min(660px,calc(100dvh - 184px))}
+  .has-music-player .village-chat-launcher{right:190px;bottom:96px}
+}
+
+/* The legacy header still exposes Village Chat as a first-class destination. */
+.kgm-chat-nav-link{font-weight:850!important}
+.kgm-chat-nav-link:before{content:"💬";font-size:10px;margin-right:1px}
+
+@media (max-width:980px) and (min-width:761px){
+  html.kgm-ai-open .kgm-chat-toast{display:none}
+}
+
+@media (max-width:760px){
+  /* Two equal launch points: social on the left, AI on the right. */
+  .village-chat-launcher{left:12px!important;right:auto!important;bottom:12px!important;width:56px;height:56px;min-height:56px;padding:7px!important;border-radius:18px!important;background:linear-gradient(145deg,#261d48,#121520)!important;border-color:rgba(141,108,255,.32)!important;box-shadow:0 17px 42px rgba(0,0,0,.34)!important}
+  .village-chat-launcher .village-chat-icon{width:40px;height:40px;border-radius:14px;background:linear-gradient(145deg,#8d6cff,#6847ed)}
+  .village-chat-pulse{left:39px;top:6px}
+  html.kgm-chat-open .kgmAiLauncher{opacity:0;pointer-events:none}
+  html.kgm-ai-open .kgm-chat-toast{display:none}
+  .has-music-player .village-chat-launcher{bottom:92px!important}.has-music-player .kgmAiLauncher{bottom:92px}
+}
+
+@media(prefers-reduced-motion:reduce){.village-chat-launcher,.kgmAiLauncher{transition:none!important}}
