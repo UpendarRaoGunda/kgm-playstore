@@ -109,6 +109,7 @@ export default function YouthTopHeader() {
   function openUpload() { closeMenu(); clickExisting(".kgm-gallery-nav-link"); window.setTimeout(() => (document.querySelector(".kgm-gallery-upload-button") as HTMLElement | null)?.click(), 100); }
   function openProfile() { closeMenu(); if (account || hasSessionToken) window.dispatchEvent(new Event("kgm-open-profile")); else clickExisting(".kgm-account-nav-link"); }
   function openAi() { closeMenu(); window.dispatchEvent(new Event("kgm-open-ai-tutor")); }
+  function openVillageChat() { closeMenu(); window.dispatchEvent(new CustomEvent("kgm-open-village-chat")); }
   function openCommunity() { jump("kgm-community-live"); }
   function toggleLanguage() { closeMenu(); window.dispatchEvent(new Event("kgm-toggle-language")); }
   function toggleTheme() {
@@ -130,7 +131,8 @@ export default function YouthTopHeader() {
           <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>{text("Home", "హోమ్")}</button>
           <button type="button" onClick={() => jump("kgm-explore")}>{text("Explore", "అన్వేషించండి")}</button>
           <button type="button" className="create" onClick={openUpload}>{text("Create", "సృష్టించండి")}</button>
-          <button type="button" className="community" onClick={openCommunity}>{text("Community", "కమ్యూనిటీ")}{chatUnread > 0 ? <b>{chatUnread > 99 ? "99+" : chatUnread}</b> : null}</button>
+          <button type="button" className="villageChat" onClick={openVillageChat}><span>💬</span>{text("Village Chat", "విలేజ్ చాట్")}{chatUnread > 0 ? <b>{chatUnread > 99 ? "99+" : chatUnread}</b> : null}</button>
+          <button type="button" className="community" onClick={openCommunity}>{text("Community", "కమ్యూనిటీ")}</button>
           <button type="button" className="ai" onClick={openAi}><span>✦</span>{text("KGM AI", "KGM AI")}</button>
         </nav>
 
@@ -147,6 +149,7 @@ export default function YouthTopHeader() {
       </div>
 
       {menuOpen ? <div className="kgmShellMenu">
+        <button type="button" onClick={openVillageChat}><span>💬</span>{text("Village Chat", "విలేజ్ చాట్")}{chatUnread > 0 ? ` · ${chatUnread > 99 ? "99+" : chatUnread} new` : ""}</button>
         <button type="button" onClick={toggleLanguage}><span>文</span>{telugu ? "English" : "తెలుగు"}</button>
         <button type="button" onClick={toggleTheme}><span>{dark ? "☀" : "◐"}</span>{dark ? text("Light mode", "లైట్ మోడ్") : text("Dark mode", "డార్క్ మోడ్")}</button>
         <div className="kgmShellInstall"><PwaInstallButton /></div>
