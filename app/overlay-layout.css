@@ -1,0 +1,34 @@
+/* Overlay positioning contract for the unified KGM shell.
+   Desktop overlays stay below the sticky 72px product header.
+   Mobile overlays become true full-screen surfaces above the header. */
+
+@media (min-width:761px){
+  html.kgm-chat-open .village-chat-shell,
+  html.kgm-chat-open .has-music-player .village-chat-shell,
+  .has-music-player html.kgm-chat-open .village-chat-shell{
+    top:84px!important;
+    right:18px!important;
+    bottom:18px!important;
+    left:auto!important;
+    height:auto!important;
+    max-height:none!important;
+    z-index:890!important;
+  }
+
+  html.kgm-chat-open .kgmShellHeader{
+    z-index:900!important;
+  }
+}
+
+@media (max-width:760px){
+  html.kgm-chat-open .village-chat-shell,
+  html.kgm-chat-open .has-music-player .village-chat-shell,
+  .has-music-player html.kgm-chat-open .village-chat-shell{
+    inset:0!important;
+    width:100dvw!important;
+    height:100dvh!important;
+    max-width:100dvw!important;
+    max-height:100dvh!important;
+    z-index:1200!important;
+  }
+}
