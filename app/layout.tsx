@@ -1,65 +1,35 @@
 import type { Metadata, Viewport } from "next";
-import MusicLibraryManager from "./MusicLibraryManager";
-import CommunityGallery from "./CommunityGalleryV3";
-import CommunityShelf from "./CommunityShelf";
-import VillageChat from "./VillageChat";
-import ScienceCinema from "./ScienceCinema";
-import ScienceCinemaDrive from "./ScienceCinemaDrive";
-import CinemaLegalMovies from "./CinemaLegalMovies";
-import CinemaPosterSourceEnhancer from "./CinemaPosterSourceEnhancer";
-import ProfileEditor from "./ProfileEditor";
-import KgmCredits from "./KgmCredits";
-import FreeKnowledgeMission from "./FreeKnowledgeMission";
-import PwaManager from "./PwaInstall";
-import YouthverseExperience from "./YouthverseExperience";
 import YouthTopHeader from "./YouthTopHeader";
 import KgmLanguageBridge from "./KgmLanguageBridge";
-import CinemaCategoryScroller from "./CinemaCategoryScroller";
-import KgmVideoChat from "./KgmVideoChat";
-import KgmAiTutor from "./KgmAiTutor";
-import KgmAiChatBridge from "./KgmAiChatBridge";
-import "./globals.css";
+import ClientFeatures from "./ClientFeatures";
+
 import "./music.css";
 import "./music-library-manager.css";
 import "./community-gallery.css";
 import "./community-gallery-edit.css";
 import "./community-shelf.css";
-import "./kgm-video-thumbnail.css";
+import "./gallery-media-fit-final.css";
 import "./village-chat.css";
-import "./mobile-fixes.css";
-import "./design-system.css";
-import "./ux-polish.css";
-import "./telugu-typography.css";
-import "./free-knowledge-mission.css";
-import "./pwa-install.css";
-import "./youthverse.css";
-import "./youthverse-polish.css";
-import "./youth-top-header.css";
-import "./overlay-layer-fixes.css";
+import "./village-chat-genz.css";
 import "./chat-notifications.css";
+import "./kgm-video-chat.css";
 import "./science-cinema.css";
 import "./science-cinema-drive.css";
 import "./cinema-legal-movies.css";
 import "./profile-avatar.css";
 import "./profile-cinema.css";
 import "./profile-logout.css";
-import "./hero-cinema-polish.css";
-import "./mobile-mission-final.css";
-import "./mobile-gallery-image-final.css";
-import "./kgm-video-chat.css";
-import "./village-chat-genz.css";
-import "./home-v2.css";
-import "./gallery-media-fit-final.css";
-import "./hero-actions-final.css";
-import "./kgm-ai-tutor.css";
-import "./kgm-ai-chat-coordination.css";
+import "./pwa-install.css";
+import "./telugu-typography.css";
+import "./kgm-ai-v3.css";
+import "./kgm-shell.css";
 
 export const metadata: Metadata = {
-  title: "KGM · Koratlagudem Youthverse",
-  description: "Koratlagudem's digital youth network for community apps, science cinema, music, photos, videos, creators and live conversation — free for everyone.",
+  title: "KGM Youthverse · Koratlagudem",
+  description: "A free digital space where village children and youth learn, build, create and connect — made in Koratlagudem and open to the world.",
   applicationName: "KGM Youthverse",
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "KGM Youthverse" },
-  other: { "codex-preview": "development", "mobile-web-app-capable": "yes" },
+  other: { "mobile-web-app-capable": "yes" },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -72,33 +42,17 @@ export const metadata: Metadata = {
   manifest: "/site-manifest.json",
 };
 
-export const viewport: Viewport = { colorScheme: "dark light", themeColor: "#09090d" };
+export const viewport: Viewport = { colorScheme: "dark light", themeColor: "#09090d", viewportFit: "cover" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en-IN">
+    <html lang="en-IN" className="kgm-youth-dark">
       <body>
-        <a className="kgm-skip-link" href="#kgm-live-drops">Skip to what's happening</a>
-        <FreeKnowledgeMission />
+        <a className="kgm-skip-link" href="#kgm-live-drops">Skip to what&apos;s happening</a>
         <KgmLanguageBridge />
         <YouthTopHeader />
         {children}
-        <YouthverseExperience />
-        <CommunityShelf />
-        <KgmCredits />
-        <MusicLibraryManager />
-        <CommunityGallery />
-        <KgmAiChatBridge />
-        <VillageChat />
-        <KgmVideoChat />
-        <ScienceCinema />
-        <ScienceCinemaDrive />
-        <CinemaLegalMovies />
-        <CinemaPosterSourceEnhancer />
-        <CinemaCategoryScroller />
-        <ProfileEditor />
-        <KgmAiTutor />
-        <PwaManager />
+        <ClientFeatures />
       </body>
     </html>
   );
