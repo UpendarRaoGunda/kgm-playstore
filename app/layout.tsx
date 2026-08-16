@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import YouthTopHeader from "./YouthTopHeader";
 import KgmLanguageBridge from "./KgmLanguageBridge";
 import ClientFeatures from "./ClientFeatures";
+import KgmCredits from "./KgmCredits";
 
 import "./music.css";
 import "./music-library-manager.css";
@@ -23,6 +24,7 @@ import "./pwa-install.css";
 import "./telugu-typography.css";
 import "./kgm-ai-v3.css";
 import "./kgm-shell.css";
+import "./kgm-credits-v3.css";
 
 export const metadata: Metadata = {
   title: "KGM Youthverse · Koratlagudem",
@@ -52,6 +54,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <KgmLanguageBridge />
         <YouthTopHeader />
         {children}
+        <KgmCredits />
         <ClientFeatures />
       </body>
     </html>
