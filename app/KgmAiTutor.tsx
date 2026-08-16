@@ -26,10 +26,10 @@ const MODES = [
 ] as const;
 
 const STARTERS = [
-  { label: "Make it click", subject: "math", mode: "explain", prompt: "Why does dividing by a fraction sometimes make a number bigger? Explain it with an everyday example." },
-  { label: "Debug with me", subject: "coding", mode: "hint", prompt: "I am learning Python. Show me how to think through a bug before giving the final fix, with a tiny example." },
-  { label: "Quiz me", subject: "science", mode: "quiz", prompt: "Quiz me on the solar system. Ask one question at a time and adapt the difficulty from my answers." },
-  { label: "Build something", subject: "create", mode: "create", prompt: "Give me a fun one-evening science or coding project I can build with things I probably already have at home." },
+  { label: "Make maths click", emoji: "π", subject: "math", mode: "explain", prompt: "Why does dividing by a fraction sometimes make a number bigger? Explain it with an everyday example." },
+  { label: "Debug with me", emoji: "</>", subject: "coding", mode: "hint", prompt: "I am learning Python. Show me how to think through a bug before giving the final fix, with a tiny example." },
+  { label: "Quiz my science", emoji: "⚛", subject: "science", mode: "quiz", prompt: "Quiz me on the solar system. Ask one question at a time and adapt the difficulty from my answers." },
+  { label: "Build something", emoji: "✦", subject: "create", mode: "create", prompt: "Give me a fun one-evening science or coding project I can build with things I probably already have at home." },
 ];
 
 type ChatRole = "user" | "assistant";
@@ -78,6 +78,7 @@ function renderText(text: string) {
 
 export default function KgmAiTutor() {
   const [open, setOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [online, setOnline] = useState<"checking" | "online" | "offline">("checking");
   const [input, setInput] = useState("");
   const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
@@ -98,6 +99,7 @@ export default function KgmAiTutor() {
   const launcherRef = useRef<HTMLButtonElement>(null);
 
   const subjectLabel = useMemo(() => SUBJECTS.find(([id]) => id === subject)?.[2] || "Auto", [subject]);
+  const modeLabel = useMemo(() => MODES.find(([id]) => id === mode)?.[1] || "Explain", [mode]);
 
   useEffect(() => {
     try {
@@ -142,17 +144,39 @@ export default function KgmAiTutor() {
   }, []);
 
   useEffect(() => {
-    if (!open) return;
-    window.setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 120);
-  }, [open]);
+    document.documentElement.classList.toggle("kgm-ai-open", open);
+    window.dispatchEvent(new CustomEvent("kgm-ai-state", { detail: { open } }));
+    if (!open) return () => document.documentElement.classList.remove("kgm-ai-open");
 
-  useEffect(() => {
-    if (!open) return;
     const prior = document.body.style.overflow;
     const media = window.matchMedia("(max-width: 760px)");
     if (media.matches) document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prior; };
+    window.setTimeout(() => inputRef.current?.focus({ preventScroll: true }), 100);
+
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.documentElement.classList.remove("kgm-ai-open");
+      document.body.style.overflow = prior;
+      window.removeEventListener("keydown", onKey);
+    };
   }, [open]);
+
+  useEffect(() => {
+    const onVillageState = (event: Event) => {
+      const detail = (event as CustomEvent<{ open?: boolean }>).detail;
+      if (detail?.open) setOpen(false);
+    };
+    const onOpenAi = () => setOpen(true);
+    window.addEventListener("kgm-village-chat-state", onVillageState);
+    window.addEventListener("kgm-open-ai-tutor", onOpenAi);
+    return () => {
+      window.removeEventListener("kgm-village-chat-state", onVillageState);
+      window.removeEventListener("kgm-open-ai-tutor", onOpenAi);
+    };
+  }, []);
 
   useEffect(() => {
     const el = listRef.current;
@@ -182,7 +206,12 @@ export default function KgmAiTutor() {
     controllerRef.current?.abort();
     controllerRef.current = null;
     setSending(false);
-    setProgress("Stopped — you can edit the question or try again.");
+    setProgress("Stopped — edit the question or try again.");
+  }
+
+  function openVillageChat() {
+    setOpen(false);
+    window.setTimeout(() => window.dispatchEvent(new CustomEvent("kgm-open-village-chat")), 0);
   }
 
   async function copy(text: string, id: string) {
@@ -299,8 +328,8 @@ export default function KgmAiTutor() {
     <button ref={launcherRef} type="button" className={`kgmAiLauncher ${open ? "open" : ""}`} aria-label={open ? "Close KGM AI Tutor" : "Open KGM AI Tutor"} aria-expanded={open} onClick={() => setOpen((value) => !value)}>
       <span className="kgmAiLauncherGlow" aria-hidden="true" />
       <span className="kgmAiLauncherMark">K</span>
-      <span className="kgmAiLauncherWords"><b>KGM AI</b><small>{online === "online" ? "online" : online === "checking" ? "checking" : "tap to retry"}</small></span>
-      <i aria-hidden="true">{open ? "×" : "↗"}</i>
+      <span className="kgmAiLauncherWords"><b>KGM AI</b><small>{online === "online" ? "learn with me" : online === "checking" ? "checking AI" : "tap to retry"}</small></span>
+      <i aria-hidden="true">{open ? "×" : "↑"}</i>
     </button>
 
     {open ? <div className="kgmAiLayer" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && window.innerWidth <= 760) setOpen(false); }}>
@@ -308,36 +337,39 @@ export default function KgmAiTutor() {
         <header className="kgmAiHeader">
           <div className="kgmAiIdentity">
             <span className="kgmAiAvatar"><b>K</b><i /></span>
-            <div><span>KGM YOUTHVERSE</span><strong>KGM AI <em>BETA</em></strong><small>your learning buddy · Qwen3-8B</small></div>
+            <div><span>KORATLAGUDEM YOUTHVERSE</span><strong>KGM AI <em>BETA</em></strong><small>your free learning buddy · Qwen3-8B</small></div>
           </div>
           <div className="kgmAiHeaderActions">
-            <button type="button" onClick={clearChat} title="New chat">↺</button>
+            <button type="button" className="kgmAiVillageSwitch" onClick={openVillageChat} title="Open Village Chat"><span>💬</span><b>Village</b></button>
+            <button type="button" onClick={clearChat} title="New AI chat" aria-label="Start a new AI chat">↺</button>
             <button type="button" onClick={() => { setOpen(false); launcherRef.current?.focus(); }} aria-label="Close KGM AI">×</button>
           </div>
         </header>
 
         <div className="kgmAiControlDeck">
-          <div className="kgmAiSubjectRail" aria-label="Choose a subject">
-            {SUBJECTS.map(([id, icon, label]) => <button type="button" key={id} className={subject === id ? "active" : ""} aria-pressed={subject === id} onClick={() => setSubject(id)}><i>{icon}</i><span>{label}</span></button>)}
+          <div className="kgmAiControlTop">
+            <div className="kgmAiSubjectRail" aria-label="Choose a subject">
+              {SUBJECTS.map(([id, icon, label]) => <button type="button" key={id} className={subject === id ? "active" : ""} aria-pressed={subject === id} onClick={() => setSubject(id)}><i>{icon}</i><span>{label}</span></button>)}
+            </div>
+            <button className={`kgmAiTuneButton ${settingsOpen ? "active" : ""}`} type="button" aria-expanded={settingsOpen} onClick={() => setSettingsOpen((value) => !value)}><span>⚙</span> Tune</button>
           </div>
           <div className="kgmAiModeRail" aria-label="Choose a tutor mode">
             {MODES.map(([id, label]) => <button type="button" key={id} className={mode === id ? "active" : ""} aria-pressed={mode === id} onClick={() => setMode(id)}>{label}</button>)}
           </div>
-          <div className="kgmAiSelectors">
+          {settingsOpen ? <div className="kgmAiSelectors">
             <label><span>Level</span><select value={level} onChange={(event) => setLevel(event.target.value)}><option value="6-8">Class 6–8</option><option value="9-10">Class 9–10</option><option value="11-12">Class 11–12</option><option value="college">College</option><option value="general">General</option></select></label>
             <label><span>Language</span><select value={language} onChange={(event) => setLanguage(event.target.value as Language)}><option value="auto">Auto</option><option value="english">English</option><option value="telugu">తెలుగు</option><option value="mix">తెలుగు + English</option></select></label>
             <div className="kgmAiDepth" role="group" aria-label="Reasoning depth"><button className={depth === "quick" ? "active" : ""} onClick={() => setDepth("quick")} type="button">⚡ Quick</button><button className={depth === "auto" ? "active" : ""} onClick={() => setDepth("auto")} type="button">Auto</button><button className={depth === "deep" ? "active" : ""} onClick={() => setDepth("deep")} type="button">🧠 Deep</button></div>
-          </div>
+          </div> : null}
         </div>
 
         <div ref={listRef} className="kgmAiConversation" aria-live="polite">
           {!transcript.length ? <div className="kgmAiWelcome">
-            <div className="kgmAiWelcomeArt" aria-hidden="true"><span>π</span><span>{"{}"}</span><span>⚛</span><span>Aa</span></div>
-            <span className="kgmAiKicker">ASK. TRY. BUILD. REPEAT.</span>
-            <h2>School brain stuck?<br/><em>We got you.</em></h2>
-            <p>Get an explanation, a tiny hint, a one-question-at-a-time quiz, a harder challenge, or turn an idea into something you can build.</p>
-            <div className="kgmAiStarterGrid">{STARTERS.map((starter) => <button type="button" key={starter.label} onClick={() => send(starter.prompt, { subject: starter.subject as Subject, mode: starter.mode as Mode })}><span>{starter.label}</span><small>{starter.prompt}</small><i>↗</i></button>)}</div>
-            <p className="kgmAiPrivacy">Keep personal info private. You never need to share your phone number, address, school name or passwords to learn here.</p>
+            <div className="kgmAiWelcomeSignal"><span>π</span><span>{"{}"}</span><span>⚛</span><span>Aa</span><b>ASK · TRY · BUILD</b></div>
+            <h2>Stuck?<br/><em>Let’s make it click.</em></h2>
+            <p>Ask a question, get a hint instead of a spoiler, quiz yourself, level up the challenge, or turn an idea into something real.</p>
+            <div className="kgmAiStarterGrid">{STARTERS.map((starter) => <button type="button" key={starter.label} onClick={() => send(starter.prompt, { subject: starter.subject as Subject, mode: starter.mode as Mode })}><i>{starter.emoji}</i><span>{starter.label}</span><small>{starter.prompt}</small><b>↗</b></button>)}</div>
+            <div className="kgmAiPrivacy"><span>🔒</span><p><strong>Learn without oversharing.</strong> Don’t post your phone number, address, school name or passwords.</p></div>
           </div> : transcript.map((item) => item.role === "user" ? <article key={item.id} className="kgmAiMessage user"><div className="kgmAiBubble"><small>{item.meta?.subject || subjectLabel}</small><p>{item.content}</p></div></article> : <article key={item.id} className="kgmAiMessage assistant">
             <div className="kgmAiBotDot">K</div>
             <div className="kgmAiAnswer">
@@ -349,14 +381,14 @@ export default function KgmAiTutor() {
           {progress ? <div className="kgmAiProgress"><i/><span>{progress}</span></div> : null}
         </div>
 
-        <footer className="kgmAiComposerWrap">
-          <div className="kgmAiNow"><span>{SUBJECTS.find(([id]) => id === subject)?.[1]} {subjectLabel}</span><b>·</b><span>{MODES.find(([id]) => id === mode)?.[1]}</span><b>·</b><span>{depth === "deep" ? "🧠 Deep" : depth === "quick" ? "⚡ Quick" : "Auto depth"}</span></div>
+        <div className="kgmAiComposerWrap" role="group" aria-label="Ask KGM AI">
+          <div className="kgmAiNow"><span>{SUBJECTS.find(([id]) => id === subject)?.[1]} {subjectLabel}</span><span>{modeLabel}</span><span>{depth === "deep" ? "🧠 Deep" : depth === "quick" ? "⚡ Quick" : "Auto depth"}</span></div>
           <div className="kgmAiComposer">
-            <textarea ref={inputRef} value={input} onChange={(event) => setInput(event.target.value.slice(0, 5000))} onKeyDown={onComposerKeyDown} rows={1} placeholder={mode === "hint" ? "Tell me where you’re stuck — I’ll hint, not spoil it…" : mode === "quiz" ? "What should I quiz you on?" : mode === "create" ? "What do you want to build?" : "Ask anything you’re learning…"} />
+            <textarea ref={inputRef} value={input} onChange={(event) => setInput(event.target.value.slice(0, 5000))} onKeyDown={onComposerKeyDown} rows={1} placeholder={mode === "hint" ? "Where are you stuck? I’ll hint, not spoil it…" : mode === "quiz" ? "What should I quiz you on?" : mode === "create" ? "What do you want to build?" : "Ask anything you’re learning…"} />
             {sending ? <button type="button" className="kgmAiSend stop" onClick={stop} aria-label="Stop KGM AI response">■</button> : <button type="button" className="kgmAiSend" onClick={() => send()} disabled={!input.trim()} aria-label="Send to KGM AI">↑</button>}
           </div>
-          <div className="kgmAiComposerMeta"><span>Enter to send · Shift+Enter for a new line</span><strong><i className={online}/>{online === "online" ? "free · self-hosted" : online === "checking" ? "checking AI" : "AI reconnecting"}</strong></div>
-        </footer>
+          <div className="kgmAiComposerMeta"><span>Enter to send · Shift+Enter for a new line</span><strong><i className={online}/>{online === "online" ? "free · self-hosted" : online === "checking" ? "checking AI" : "reconnecting"}</strong></div>
+        </div>
       </section>
     </div> : null}
   </>;
