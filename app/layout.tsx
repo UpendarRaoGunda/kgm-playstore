@@ -24,6 +24,7 @@ import "./pwa-install.css";
 import "./telugu-typography.css";
 import "./kgm-ai-v3.css";
 import "./kgm-shell.css";
+import "./hamburger-menu-fix.css";
 import "./kgm-credits-v3.css";
 import "./overlay-layout.css";
 
