@@ -103,6 +103,20 @@ export default function YouthTopHeader() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [menuOpen]);
+
   function closeMenu() { setMenuOpen(false); }
   function jump(id: string) { closeMenu(); document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }); }
   function clickExisting(selector: string) { closeMenu(); (document.querySelector(selector) as HTMLElement | null)?.click(); }
@@ -142,19 +156,26 @@ export default function YouthTopHeader() {
             {account ? <KgmAvatar value={account.avatar} nickname={account.nickname} size="xs" /> : <span>☺</span>}
             <strong>{account?.nickname || text("You", "మీరు")}</strong>
           </button>
-          <button className={`kgmShellMore${menuOpen ? " open" : ""}`} type="button" onClick={() => setMenuOpen((value) => !value)} aria-expanded={menuOpen} aria-label={text("Open settings", "సెట్టింగ్‌లు తెరవండి")}><i/><i/><i/></button>
+          <button className={`kgmShellMore${menuOpen ? " open" : ""}`} type="button" onClick={() => setMenuOpen((value) => !value)} aria-expanded={menuOpen} aria-label={menuOpen ? text("Close settings", "సెట్టింగ్‌లు మూసివేయండి") : text("Open settings", "సెట్టింగ్‌లు తెరవండి")}><i/><i/><i/></button>
         </div>
 
         <div className="nav-links kgmLegacyPortalHost" aria-hidden="true" />
       </div>
 
-      {menuOpen ? <div className="kgmShellMenu">
-        <button type="button" onClick={openVillageChat}><span>💬</span>{text("Village Chat", "విలేజ్ చాట్")}{chatUnread > 0 ? ` · ${chatUnread > 99 ? "99+" : chatUnread} new` : ""}</button>
-        <button type="button" onClick={toggleLanguage}><span>文</span>{telugu ? "English" : "తెలుగు"}</button>
-        <button type="button" onClick={toggleTheme}><span>{dark ? "☀" : "◐"}</span>{dark ? text("Light mode", "లైట్ మోడ్") : text("Dark mode", "డార్క్ మోడ్")}</button>
-        <div className="kgmShellInstall"><PwaInstallButton /></div>
-        <button type="button" onClick={() => { closeMenu(); window.location.href = "/privacy"; }}><span>◉</span>{text("Privacy & safety", "గోప్యత & భద్రత")}</button>
-      </div> : null}
+      {menuOpen ? <>
+        <button className="kgmShellMenuBackdrop" type="button" aria-label={text("Close menu", "మెను మూసివేయండి")} onClick={closeMenu} />
+        <div className="kgmShellMenu" role="dialog" aria-modal="true" aria-label={text("Settings menu", "సెట్టింగ్‌ల మెను")}>
+          <div className="kgmShellMenuTop">
+            <strong>{text("Menu", "మెను")}</strong>
+            <button className="kgmShellMenuClose" type="button" onClick={closeMenu} aria-label={text("Close menu", "మెను మూసివేయండి")}>×</button>
+          </div>
+          <button type="button" onClick={openVillageChat}><span>💬</span>{text("Village Chat", "విలేజ్ చాట్")}{chatUnread > 0 ? ` · ${chatUnread > 99 ? "99+" : chatUnread} new` : ""}</button>
+          <button type="button" onClick={toggleLanguage}><span>文</span>{telugu ? "English" : "తెలుగు"}</button>
+          <button type="button" onClick={toggleTheme}><span>{dark ? "☀" : "◐"}</span>{dark ? text("Light mode", "లైట్ మోడ్") : text("Dark mode", "డార్క్ మోడ్")}</button>
+          <div className="kgmShellInstall"><PwaInstallButton /></div>
+          <button type="button" onClick={() => { closeMenu(); window.location.href = "/privacy"; }}><span>◉</span>{text("Privacy & safety", "గోప్యత & భద్రత")}</button>
+        </div>
+      </> : null}
     </header>
   );
 }
